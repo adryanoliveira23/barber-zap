@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSchedule, updateSchedule } from '@/lib/db';
+import { getSchedule, saveSchedule } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const barbershopId = req.nextUrl.searchParams.get('barbershopId');
@@ -31,6 +31,6 @@ export async function PUT(req: NextRequest) {
     sendReminder2h: config.sendReminder2h !== undefined ? config.sendReminder2h : schedule.whatsapp_config.sendReminder2h
   };
 
-  await updateSchedule(schedule);
+  await saveSchedule(schedule);
   return NextResponse.json({ success: true, config: schedule.whatsapp_config });
 }

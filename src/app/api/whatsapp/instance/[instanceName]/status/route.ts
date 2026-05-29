@@ -3,10 +3,10 @@ import { getSchedule } from '@/lib/db';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { instanceName: string } }
+  { params }: { params: Promise<{ instanceName: string }> }
 ) {
   try {
-    const instanceName = params.instanceName;
+    const { instanceName } = await params;
     const url = new URL(req.url);
     const barbershopId = url.searchParams.get('barbershopId');
 
