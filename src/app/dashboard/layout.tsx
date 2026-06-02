@@ -65,6 +65,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const menuItems = [
     { name: "Painel", href: "/dashboard", icon: LayoutDashboard, locked: !hasAccess },
     { name: "Serviços", href: "/dashboard/services", icon: Scissors, locked: !hasAccess },
+    { name: "Horários", href: "/dashboard/schedule", icon: CalendarClock, locked: !hasAccess },
     { name: "Clientes & CRM", href: "/dashboard/customers", icon: Users, locked: !hasAccess },
     { name: "Mensagens WhatsApp", href: "/dashboard/whatsapp", icon: MessageSquare, locked: !hasAccess },
     { name: "Assinatura", href: "/dashboard/subscription", icon: CreditCard, locked: false },
