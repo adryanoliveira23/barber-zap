@@ -77,7 +77,6 @@ export default function ServicesPage() {
     try {
       const serviceData = {
         barbershop_id: barbershop.id,
-        user_id: barbershop.user_id,
         name,
         price: Number(price),
         duration: Number(duration),
@@ -138,7 +137,7 @@ export default function ServicesPage() {
             <LayoutGrid className="h-5 w-5 text-gold-500" />
             Catálogo de Serviços
           </h3>
-          <p className="text-xs text-zinc-500 font-medium">Cadastre os serviços oferecidos e seus respectivos valores e durações.</p>
+          <p className="text-xs text-zinc-500 font-medium">Cadastre os serviços oferecidos e seus respectivos valores.</p>
         </div>
         <Button onClick={handleOpenAddModal} className="text-xs font-semibold gap-1.5 h-10">
           <Plus className="h-4 w-4" />
@@ -148,10 +147,11 @@ export default function ServicesPage() {
 
       {/* Lista de Serviços */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-40 rounded-2xl bg-zinc-900/50 border border-zinc-850 animate-pulse" />
-          ))}
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-10 w-10 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-500 animate-spin">
+            <Clock className="h-5 w-5" />
+          </div>
+          <p className="text-xs text-zinc-550 text-zinc-500 font-semibold mt-3 animate-pulse">Carregando serviços...</p>
         </div>
       ) : services.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl border border-zinc-850">
@@ -207,10 +207,6 @@ export default function ServicesPage() {
                         <div className="flex items-center text-xs text-zinc-400 font-semibold gap-1">
                           <DollarSign className="h-3.5 w-3.5 text-gold-500 shrink-0" />
                           R$ {service.price.toFixed(2)}
-                        </div>
-                        <div className="flex items-center text-xs text-zinc-400 font-semibold gap-1">
-                          <Clock className="h-3.5 w-3.5 text-gold-500 shrink-0" />
-                          {service.duration} min
                         </div>
                       </div>
 
@@ -268,35 +264,15 @@ export default function ServicesPage() {
             required
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Preço (R$) *"
-              type="number"
-              step="0.01"
-              placeholder="Ex: 50.00"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-            />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                Duração *
-              </label>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm transition-all focus:outline-none focus:ring-1 focus:ring-gold-500/50 focus:border-gold-500 glass-input text-zinc-100 bg-obsidian-900 border border-zinc-800"
-                required
-              >
-                <option value="15" className="bg-obsidian-900">15 min</option>
-                <option value="30" className="bg-obsidian-900">30 min</option>
-                <option value="45" className="bg-obsidian-900">45 min</option>
-                <option value="60" className="bg-obsidian-900">1 hora</option>
-                <option value="90" className="bg-obsidian-900">1h 30min</option>
-                <option value="120" className="bg-obsidian-900">2 horas</option>
-              </select>
-            </div>
-          </div>
+          <Input
+            label="Preço (R$) *"
+            type="number"
+            step="0.01"
+            placeholder="Ex: 50.00"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+          />
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">

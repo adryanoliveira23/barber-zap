@@ -145,7 +145,7 @@ export default function BookingSimulator() {
             <span>09:41</span>
             <div className="flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span className="text-[8px] uppercase tracking-wider text-emerald-600">Simulador</span>
+              <span className="text-[8px] uppercase tracking-wider text-emerald-600">Online</span>
             </div>
           </div>
 
@@ -409,7 +409,7 @@ export default function BookingSimulator() {
                   <div>
                     <h4 className="text-xs font-black text-zinc-900">Horário Confirmado! 🎉</h4>
                     <p className="text-[9px] text-zinc-400 leading-normal max-w-[180px] mx-auto mt-0.5">
-                      Sua reserva foi concluída. Veja a notificação do WhatsApp simulada acima!
+                      Sua reserva foi concluída. Veja a notificação do WhatsApp enviada acima!
                     </p>
                   </div>
 

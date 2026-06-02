@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useDashboard } from "@/context/DashboardContext";
+import { useAuth } from "@/context/AuthContext";
 import { getAppointments, updateAppointmentStatus, Appointment, getServices, Service } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,15 +21,32 @@ import {
   UserMinus,
   Check,
   Award,
+  Copy,
+  Globe,
+  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import QRCodeButton from "./QRCodeButton";
 
 export default function DashboardPage() {
   const { barbershop } = useDashboard();
+  const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isSubscribed = user?.user_metadata?.is_subscribed === true;
+
+  const trialDaysRemaining = useMemo(() => {
+    if (!user?.created_at) return 7;
+    const createdDate = new Date(user.created_at);
+    const trialEndDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const today = new Date();
+    const diffTime = trialEndDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  }, [user]);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -36,6 +54,28 @@ export default function DashboardPage() {
   });
 
   const { success, error, info } = useToast();
+
+  const [copied, setCopied] = useState(false);
+  const handleCopyLink = useCallback(async () => {
+    if (!barbershop) return;
+    const bookingUrl = `${window.location.origin}/${barbershop.slug}`;
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      setCopied(true);
+      success("Link copiado!", "O link de agendamento foi copiado com sucesso.");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      error("Erro ao copiar", "Não foi possível copiar o link.");
+    }
+  }, [barbershop, success, error]);
+
+  const handleShareWhatsApp = useCallback(() => {
+    if (!barbershop) return;
+    const bookingUrl = `${window.location.origin}/${barbershop.slug}`;
+    const text = `Olá! Agende seu horário na ${barbershop.name} diretamente pelo link: ${bookingUrl}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  }, [barbershop]);
 
   const loadData = useCallback(async () => {
     if (!barbershop) return;
@@ -222,6 +262,107 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-10">
+      {/* Teste Grátis Banner */}
+      {!isSubscribed && (
+        <Card className="border-amber-500/20 bg-amber-500/5 relative overflow-hidden transition-all duration-300">
+          <CardContent className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+                <Clock className="h-5 w-5 animate-pulse" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-amber-400">
+                  {trialDaysRemaining > 0
+                    ? `Período de Teste Grátis: ${trialDaysRemaining} ${
+                        trialDaysRemaining === 1 ? "dia restante" : "dias restantes"
+                      }`
+                    : "Seu Período de Teste Grátis expirou!"}
+                </h4>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Adquira o Plano Pro hoje mesmo para garantir que seu link de agendamentos e lembretes automáticos continuem ativos.
+                </p>
+              </div>
+            </div>
+
+            <a href="/dashboard/subscription" className="w-full sm:w-auto shrink-0">
+              <Button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-obsidian-950 font-extrabold text-xs h-9 cursor-pointer">
+                Adquirir Plano Pro
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Banner de Compartilhamento / Link de Agendamento */}
+      {barbershop && (
+        <Card className="border-gold-500/20 bg-obsidian-900/90 relative overflow-hidden transition-all duration-300 hover:border-gold-500/40">
+          {/* Subtle gold ambient glow */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500/5 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex flex-col gap-2 min-w-0 flex-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-[10px] text-gold-500 font-extrabold uppercase w-fit">
+                🚀 Sua Agenda Online está Ativa
+              </div>
+              <h2 className="text-base font-bold text-zinc-100 mt-1">
+                Divulgue seu link para receber agendamentos
+              </h2>
+              <p className="text-xs text-zinc-400 leading-normal max-w-xl">
+                Seus clientes podem agendar cortes sozinhos, consultar o progresso do Cartão Fidelidade e receber lembretes pelo WhatsApp automaticamente.
+              </p>
+              
+              {/* @ Handle Highlight */}
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-zinc-500 font-semibold">Seu @ de usuário:</span>
+                <span className="px-2.5 py-0.5 rounded-lg bg-zinc-950/60 border border-zinc-850 text-xs font-bold text-gold-500">
+                  @{barbershop.slug}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full md:w-auto">
+              {/* Custom Input link style block */}
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-obsidian-950 border border-zinc-800/80 text-xs text-zinc-400 select-all font-mono font-medium max-w-xs truncate w-full md:w-fit">
+                <Globe className="h-4 w-4 text-gold-500/80 shrink-0" />
+                <span className="truncate">{typeof window !== "undefined" ? window.location.origin : ""}/{barbershop.slug}</span>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button
+                  onClick={handleCopyLink}
+                  className="flex-1 sm:flex-initial h-10 px-4 font-bold text-xs bg-zinc-950/60 hover:bg-zinc-900 border-zinc-800 text-gold-500 hover:text-gold-400 cursor-pointer"
+                  variant="gold-outline"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1.5 text-gold-500" />
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1.5" />
+                      Copiar Link
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleShareWhatsApp}
+                  className="flex-1 sm:flex-initial h-10 px-4 font-bold text-xs bg-emerald-500 text-obsidian-950 hover:bg-emerald-400 focus:ring-emerald-500 shadow-lg shadow-emerald-500/5 cursor-pointer"
+                >
+                  <MessageSquare className="h-4 w-4 mr-1.5 fill-current" />
+                  Divulgar
+                </Button>
+
+                {/* QR Code button wrapper */}
+                <div className="shrink-0">
+                  <QRCodeButton />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

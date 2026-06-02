@@ -84,7 +84,7 @@ export default function PublicBookingPage() {
         }
 
         setBarbershop(shop);
-        
+
         // Carregar serviços, agendas e agendamentos ocupados
         const [svcs, sched, appts] = await Promise.all([
           getServices(shop.id),
@@ -194,7 +194,7 @@ export default function PublicBookingPage() {
     // Gerar slots de hora em hora/fração
     while (current + getSelectedDuration() <= endLimit) {
       const slotTimeStr = minutesToTimeString(current);
-      
+
       // 1.3 Verificar se o slot conflita com horário de almoço/pausas
       const conflictsWithBreak = breakTimes.some((brk) => {
         const brkStart = timeStringToMinutes(brk.start);
@@ -213,7 +213,7 @@ export default function PublicBookingPage() {
         if (appt.date !== selectedDate || appt.status === "cancelled" || appt.status === "no_show") return false;
         const apptStart = timeStringToMinutes(appt.time);
         const apptEnd = apptStart + appt.total_duration;
-        
+
         const slotEnd = current + getSelectedDuration();
         return (
           (current >= apptStart && current < apptEnd) ||
@@ -300,7 +300,7 @@ export default function PublicBookingPage() {
 
         const created = await createAppointment(apptData);
         setConfirmedAppt(created);
-        
+
         success("Agendado com sucesso!", `Seu horário foi reservado na agenda.`);
         setStep(5);
       }
@@ -331,7 +331,7 @@ export default function PublicBookingPage() {
     const dateStr = new Date(confirmedAppt.date + "T00:00:00").toLocaleDateString("pt-BR");
     const message = `Olá, agendei um horário na ${shopName}!\n\n📅 Data: ${dateStr}\n⏰ Horário: ${confirmedAppt.time}\n💈 Serviços: ${servicesText}\n💵 Valor total: R$ ${Number(confirmedAppt.total_price).toFixed(2)}\n👤 Nome: ${customerName}`;
 
-    const shopWhatsapp = barbershop.whatsapp || "5511999999999";
+    const shopWhatsapp = barbershop.whatsapp || "556699762785";
     const cleanPhone = shopWhatsapp.replace(/[^0-9]/g, "");
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -345,18 +345,18 @@ export default function PublicBookingPage() {
   const getBookingDays = () => {
     const days = [];
     const today = new Date();
-    
+
     for (let i = 0; i < 14; i++) {
       const d = new Date();
       d.setDate(today.getDate() + i);
-      
+
       const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
       const dayName = weekdays[d.getDay()];
-      
+
       // Checar se o barbeiro atende nesse dia da semana
       const dayConfig = schedule?.weekly_hours[dayName];
       const isBlocked = schedule?.blocked_dates?.includes(d.toLocaleDateString("sv-SE"));
-      
+
       if (dayConfig?.active && !isBlocked) {
         days.push({
           dateString: d.toLocaleDateString("sv-SE"),
@@ -371,12 +371,12 @@ export default function PublicBookingPage() {
 
   return (
     <div className="min-h-screen w-full bg-obsidian-950 text-zinc-300 flex flex-col items-center justify-start pb-10">
-      
+
       {/* 1. BRAND COVER BANNER */}
       <div className="w-full h-52 bg-gradient-to-b from-zinc-900/60 to-obsidian-950 relative border-b border-zinc-800/80 shrink-0 flex items-center justify-center">
         {/* Subtle decorative glow overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-gold-500/5 via-transparent to-transparent pointer-events-none"></div>
-        
+
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <Button
             variant="secondary"
@@ -386,7 +386,7 @@ export default function PublicBookingPage() {
             <Award className="h-4 w-4" />
             {viewLoyalty ? "Agendar Horário" : "Meu Cartão Fidelidade"}
           </Button>
-          
+
           <div className="flex gap-2">
             {barbershop.instagram && (
               <a
@@ -425,7 +425,7 @@ export default function PublicBookingPage() {
 
       {/* 2. AREA DE SEÇÕES (FIDELIDADE OU FLUXO DE AGENDAMENTO) */}
       <div className="w-full max-w-md px-4 mt-8 z-10">
-        
+
         <AnimatePresence mode="wait">
           {viewLoyalty ? (
             /* SEÇÃO DO CARTÃO FIDELIDADE PÚBLICO */
@@ -483,13 +483,12 @@ export default function PublicBookingPage() {
                                 return (
                                   <div
                                     key={i}
-                                    className={`h-9 rounded-lg flex items-center justify-center border text-xs font-semibold ${
-                                      isStamped
+                                    className={`h-9 rounded-lg flex items-center justify-center border text-xs font-semibold ${isStamped
                                         ? "bg-gold-500 border-gold-500 text-obsidian-950"
                                         : stampNumber === 10
-                                        ? "bg-gold-500/5 border-dashed border-gold-500/20 text-gold-500"
-                                        : "bg-obsidian-900 border-zinc-850 text-zinc-650"
-                                    }`}
+                                          ? "bg-gold-500/5 border-dashed border-gold-500/20 text-gold-500"
+                                          : "bg-obsidian-900 border-zinc-850 text-zinc-650"
+                                      }`}
                                   >
                                     {isStamped ? (
                                       <Star className="h-3.5 w-3.5 fill-current" />
@@ -550,7 +549,7 @@ export default function PublicBookingPage() {
                 )}
 
                 <CardContent className="pt-6">
-                  
+
                   {/* ETAPA 1: ESCOLHER SERVIÇOS */}
                   {step === 1 && (
                     <div className="flex flex-col gap-4">
@@ -569,11 +568,10 @@ export default function PublicBookingPage() {
                               <button
                                 key={s.id}
                                 onClick={() => handleToggleService(s)}
-                                className={`p-4 rounded-xl border flex justify-between items-start text-left transition-all cursor-pointer ${
-                                  isSelected
+                                className={`p-4 rounded-xl border flex justify-between items-start text-left transition-all cursor-pointer ${isSelected
                                     ? "bg-gold-500/10 border-gold-500 ring-1 ring-gold-500/20"
                                     : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 hover:bg-gold-500/5"
-                                }`}
+                                  }`}
                               >
                                 <div className="flex flex-col gap-1 min-w-0 pr-4">
                                   <span className={`text-sm font-bold truncate ${isSelected ? "text-gold-500" : "text-zinc-200"}`}>
@@ -640,11 +638,10 @@ export default function PublicBookingPage() {
                                 setSelectedTime(""); // Limpar hora para novo dia
                                 setStep(3); // Avançar direto
                               }}
-                              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
-                                isSelected
+                              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${isSelected
                                   ? "bg-gold-500 text-obsidian-950 border-gold-500 font-bold shadow-lg shadow-gold-500/20"
                                   : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 text-zinc-400 hover:text-zinc-200"
-                              }`}
+                                }`}
                             >
                               <span className={`text-[9px] uppercase tracking-wider font-bold ${isSelected ? "text-obsidian-950 opacity-90" : "text-zinc-550 text-zinc-500"}`}>{day.weekday}</span>
                               <span className="text-base font-extrabold">{day.dayNum}</span>
@@ -688,11 +685,10 @@ export default function PublicBookingPage() {
                                   setSelectedTime(time);
                                   setStep(4);
                                 }}
-                                className={`py-3 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
-                                  isSelected
+                                className={`py-3 rounded-lg border text-xs font-bold transition-all cursor-pointer ${isSelected
                                     ? "bg-gold-500 text-obsidian-950 border-gold-500 shadow-lg shadow-gold-500/20"
                                     : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 hover:bg-gold-500/5 text-zinc-300 hover:text-zinc-100"
-                                }`}
+                                  }`}
                               >
                                 {time}
                               </button>
@@ -754,7 +750,7 @@ export default function PublicBookingPage() {
                       <div className="h-14 w-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 animate-bounce">
                         <CheckCircle2 className="h-8 w-8" />
                       </div>
-                      
+
                       <div>
                         <h3 className="text-md font-bold text-zinc-100">Horário Reservado! 🎉</h3>
                         <p className="text-xs text-zinc-400 leading-normal max-w-xs mt-1">

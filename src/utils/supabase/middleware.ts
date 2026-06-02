@@ -36,15 +36,33 @@ export async function updateSession(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
   const isLoginRoute = request.nextUrl.pathname.startsWith('/login');
 
-  if (isDashboardRoute && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+  if (isDashboardRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+
+    const isSubscriptionRoute = request.nextUrl.pathname === '/dashboard/subscription';
+    const isSubscribed = !!user?.user_metadata?.is_subscribed;
+    const createdTime = user?.created_at ? new Date(user.created_at).getTime() : 0;
+    const isTrialActive = createdTime ? (createdTime + 7 * 24 * 60 * 60 * 1000) > Date.now() : false;
+    const hasAccess = isSubscribed || isTrialActive;
+
+    if (!hasAccess && !isSubscriptionRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard/subscription';
+      return NextResponse.redirect(url);
+    }
   }
 
   if (isLoginRoute && user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    const isSubscribed = !!user?.user_metadata?.is_subscribed;
+    const createdTime = user?.created_at ? new Date(user.created_at).getTime() : 0;
+    const isTrialActive = createdTime ? (createdTime + 7 * 24 * 60 * 60 * 1000) > Date.now() : false;
+    const hasAccess = isSubscribed || isTrialActive;
+    url.pathname = hasAccess ? '/dashboard' : '/dashboard/subscription';
     return NextResponse.redirect(url);
   }
 

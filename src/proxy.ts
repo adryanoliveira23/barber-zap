@@ -1,11 +1,9 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
+import { updateSession } from "./utils/supabase/middleware";
 
-// Essa função pode ser expandida para proteger rotas do dashboard no futuro
-export function proxy(request: NextRequest) {
-  // Por enquanto, apenas permite acesso a todas as rotas
-  // As verificações de autenticação estão sendo feitas no cliente via DashboardContext
-  return NextResponse.next();
+// Essa função protege as rotas do dashboard no servidor
+export async function proxy(request: NextRequest) {
+  return await updateSession(request);
 }
 
 // Configuração para aplicar o proxy apenas em rotas específicas se necessário

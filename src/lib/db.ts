@@ -16,7 +16,6 @@ export interface Barbershop {
 export interface Service {
   id: string;
   barbershop_id: string;
-  user_id: string;
   name: string;
   price: number;
   duration: number;
@@ -108,7 +107,8 @@ interface SupabaseError {
 
 const isTableMissingError = (error: SupabaseError): boolean => {
   if (!error) return false;
-  return error.code === "42P01";
+  // 42P01 = table does not exist, PGRST204 = column not found in schema cache
+  return error.code === "42P01" || error.code === "PGRST204";
 };
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -163,7 +163,7 @@ export async function getOrCreateBarbershop(userId: string, defaultName: string)
         slug: defaultSlug,
         description: "Sua barbearia moderna com agendamento rápido (Modo de Demonstração).",
         address: "Rua das Barbearias, 123",
-        whatsapp: "5511999999999",
+      whatsapp: "556699762785",
         instagram: "barberzap",
       };
       localShops.push(myShop);
@@ -252,7 +252,6 @@ export async function getServices(barbershopId: string): Promise<Service[]> {
       shopServices = DEFAULT_SERVICES.map(s => ({
         id: crypto.randomUUID(),
         barbershop_id: barbershopId,
-        user_id: "local-user",
         name: s.name,
         price: s.price,
         duration: s.duration,
@@ -392,6 +391,16 @@ export async function saveSchedule(schedule: Schedule): Promise<Schedule> {
 }
 
 export async function getAppointments(barbershopId: string): Promise<Appointment[]> {
+  const normalizeAppointment = (appt: any): Appointment => ({
+    ...appt,
+    // Normalize service_ids: DB may return UUID[] (native array) or JSONB array
+    service_ids: Array.isArray(appt.service_ids)
+      ? appt.service_ids.map(String)
+      : [],
+    total_duration: Number(appt.total_duration) || 30,
+    total_price: Number(appt.total_price) || 0,
+  });
+
   try {
     const { data, error } = await supabase
       .from("appointments")
@@ -401,11 +410,11 @@ export async function getAppointments(barbershopId: string): Promise<Appointment
       .order("time", { ascending: true });
 
     if (error) throw error;
-    return data as Appointment[];
+    return (data || []).map(normalizeAppointment);
   } catch (err) {
     // Fallback: retorna local storage sem dados mock
     const localAppts = getLocalData<Appointment[]>("appointments") || [];
-    return localAppts.filter(a => a.barbershop_id === barbershopId);
+    return localAppts.filter(a => a.barbershop_id === barbershopId).map(normalizeAppointment);
   }
 }
 
@@ -460,7 +469,8 @@ export async function createAppointment(appt: Omit<Appointment, "id" | "status" 
 
     if (error) throw error;
 
-    await updateCRMAndLoyalty(newAppt);
+    // Fire-and-forget: CRM update and WhatsApp confirmation don't block the response
+    updateCRMAndLoyalty(newAppt).catch(e => console.error("CRM update error:", e));
     triggerConfirmationMsg(newAppt);
 
     return data as Appointment;
@@ -469,13 +479,33 @@ export async function createAppointment(appt: Omit<Appointment, "id" | "status" 
     localAppts.push(newAppt);
     setLocalData("appointments", localAppts);
 
-    await updateCRMAndLoyaltyLocal(newAppt);
+    // Fire-and-forget in fallback too
+    updateCRMAndLoyaltyLocal(newAppt).catch(e => console.error("Local CRM update error:", e));
     triggerConfirmationMsg(newAppt);
 
     return newAppt;
   }
 }
 
+export async function deleteAppointment(apptId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("appointments")
+      .delete()
+      .eq("id", apptId);
+
+    if (error) throw error;
+
+    let localAppts = getLocalData<Appointment[]>("appointments") || [];
+    localAppts = localAppts.filter(a => a.id !== apptId);
+    setLocalData("appointments", localAppts);
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao deletar agendamento:", err);
+    return false;
+  }
+}
 export async function updateAppointmentStatus(
   apptId: string,
   status: Appointment["status"]

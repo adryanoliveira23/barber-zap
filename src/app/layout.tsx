@@ -8,7 +8,8 @@ import OneSignalProvider from "@/components/OneSignalProvider";
 // Extend window type for OneSignal
 declare global {
   interface Window {
-    OneSignalDeferred?: Array<(OneSignal: any) => void | Promise<void>>;
+    OneSignalDeferred?: any;
+    OneSignal?: any;
   }
 }
 
@@ -25,6 +26,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BarberZap - Agendamento Inteligente para Barbearias",
   description: "SaaS premium de agendamento mobile-first para barbearias modernas.",
+  icons: {
+    icon: "/assets/logo.png",
+    apple: "/assets/logo.png",
+  },
 };
 
 export default function RootLayout({

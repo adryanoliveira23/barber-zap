@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Mail, Calendar, Shield, UserPlus, X, Eye, EyeOff } from "lucide-react";
-
+import { Search, Mail, Calendar, Shield, UserPlus, X, Eye, EyeOff, Sparkles, Clock, AlertCircle, Check, MessageSquare } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface UserWithBarbershop {
@@ -14,12 +13,43 @@ interface UserWithBarbershop {
   created_at: string;
   barbershop_name?: string;
   barbershop_slug?: string;
+  is_subscribed: boolean;
+  subscription_status: "subscribed" | "trial" | "expired";
+  trial_days_remaining: number | null;
+  subscription_activated_at: string | null;
+  whatsapp?: string;
+}
+
+function SubscriptionBadge({ user }: { user: UserWithBarbershop }) {
+  if (user.subscription_status === "subscribed") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-wide">
+        <Sparkles className="h-2.5 w-2.5 fill-current" />
+        Pro
+      </span>
+    );
+  }
+  if (user.subscription_status === "trial") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-400 uppercase tracking-wide">
+        <Clock className="h-2.5 w-2.5 animate-pulse" />
+        Teste {user.trial_days_remaining}d
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-bold text-red-400 uppercase tracking-wide">
+      <AlertCircle className="h-2.5 w-2.5" />
+      Expirado
+    </span>
+  );
 }
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<UserWithBarbershop[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "subscribed" | "trial_expired">("all");
   const [showModal, setShowModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -27,7 +57,7 @@ export default function AdminUsers() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
-
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -51,6 +81,26 @@ export default function AdminUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleToggleSubscription = async (user: UserWithBarbershop) => {
+    setTogglingUserId(user.id);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, is_subscribed: !user.is_subscribed }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+      await fetchUsers();
+    } catch (err: any) {
+      console.error("Erro ao alterar assinatura:", err.message);
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -69,7 +119,7 @@ export default function AdminUsers() {
       setCreateSuccess(`Usuário ${data.user.email} criado com sucesso!`);
       setNewEmail("");
       setNewPassword("");
-      await fetchUsers(); // Recarregar lista
+      await fetchUsers();
       setTimeout(() => {
         setShowModal(false);
         setCreateSuccess("");
@@ -81,10 +131,20 @@ export default function AdminUsers() {
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(search.toLowerCase()) ||
-    (user.barbershop_name?.toLowerCase().includes(search.toLowerCase()) || false)
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(search.toLowerCase()) ||
+      (user.barbershop_name?.toLowerCase().includes(search.toLowerCase()) || false);
+    
+    if (statusFilter === "all") return matchesSearch;
+    if (statusFilter === "subscribed") return matchesSearch && user.subscription_status === "subscribed";
+    if (statusFilter === "trial_expired") return matchesSearch && user.subscription_status !== "subscribed";
+    return matchesSearch;
+  });
+
+  // Stats por status
+  const subscribedCount = users.filter(u => u.subscription_status === "subscribed").length;
+  const trialCount = users.filter(u => u.subscription_status === "trial").length;
+  const expiredCount = users.filter(u => u.subscription_status === "expired").length;
 
   if (loading) {
     return (
@@ -121,6 +181,67 @@ export default function AdminUsers() {
         </div>
       </div>
 
+      {/* Status Summary Cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 flex items-center gap-3">
+          <Sparkles className="h-5 w-5 text-emerald-400 fill-current shrink-0" />
+          <div>
+            <p className="text-xs text-zinc-500 font-medium">Assinantes Pro</p>
+            <p className="text-lg font-black text-emerald-400">{subscribedCount}</p>
+          </div>
+        </div>
+        <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 flex items-center gap-3">
+          <Clock className="h-5 w-5 text-amber-400 shrink-0" />
+          <div>
+            <p className="text-xs text-zinc-500 font-medium">Teste Grátis</p>
+            <p className="text-lg font-black text-amber-400">{trialCount}</p>
+          </div>
+        </div>
+        <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/15 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+          <div>
+            <p className="text-xs text-zinc-500 font-medium">Expirados</p>
+            <p className="text-lg font-black text-red-400">{expiredCount}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros de Status */}
+      <div className="flex gap-2 bg-obsidian-900/30 p-1.5 border border-zinc-800/40 rounded-xl w-fit">
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            statusFilter === "all"
+              ? "bg-zinc-800 text-zinc-100"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          Todos ({users.length})
+        </button>
+        <button
+          onClick={() => setStatusFilter("subscribed")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+            statusFilter === "subscribed"
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          <Sparkles className="h-3 w-3 fill-current" />
+          Assinantes Pro ({subscribedCount})
+        </button>
+        <button
+          onClick={() => setStatusFilter("trial_expired")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+            statusFilter === "trial_expired"
+              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          <Clock className="h-3 w-3" />
+          Aguardando Pagamento / Teste ({trialCount + expiredCount})
+        </button>
+      </div>
+
       {/* Users Table */}
       <Card className="bg-obsidian-900/50 border-zinc-800">
         <CardContent className="p-0">
@@ -129,8 +250,10 @@ export default function AdminUsers() {
               <thead className="border-b border-zinc-800">
                 <tr className="text-left text-xs text-zinc-500">
                   <th className="p-4 font-medium">Usuário</th>
+                  <th className="p-4 font-medium">WhatsApp / Contato</th>
                   <th className="p-4 font-medium">Barbearia</th>
-                  <th className="p-4 font-medium">Criado em</th>
+                  <th className="p-4 font-medium">Status</th>
+                  <th className="p-4 font-medium">Cadastro</th>
                   <th className="p-4 font-medium">Ações</th>
                 </tr>
               </thead>
@@ -146,6 +269,24 @@ export default function AdminUsers() {
                       </div>
                     </td>
                     <td className="p-4">
+                      {user.whatsapp ? (
+                        <a
+                          href={`https://wa.me/${user.whatsapp.replace(/\D/g, "").startsWith("55") ? "" : "55"}${user.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
+                            `Olá! Vi que você se cadastrou no BarberZap com o e-mail ${user.email}, mas não concluiu o pagamento da assinatura Pro. Ficou com alguma dúvida ou gostaria de ajuda para configurar o seu painel de agendamentos?`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer"
+                          title="Falar no WhatsApp"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                          <span>{user.whatsapp}</span>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-zinc-600 italic">Não informado</span>
+                      )}
+                    </td>
+                    <td className="p-4">
                       {user.barbershop_name ? (
                         <div>
                           <div className="text-sm font-medium text-zinc-200">{user.barbershop_name}</div>
@@ -156,6 +297,9 @@ export default function AdminUsers() {
                       )}
                     </td>
                     <td className="p-4">
+                      <SubscriptionBadge user={user} />
+                    </td>
+                    <td className="p-4">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-zinc-600" />
                         <span className="text-sm text-zinc-400">
@@ -164,8 +308,19 @@ export default function AdminUsers() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <Button variant="ghost" size="sm" className="text-zinc-500 hover:text-zinc-200">
-                        <Shield className="h-4 w-4" />
+                      <Button
+                        variant={user.is_subscribed ? "danger" : "ghost"}
+                        size="sm"
+                        className={`text-xs gap-1.5 ${user.is_subscribed ? "" : "text-emerald-500 hover:text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/5"}`}
+                        onClick={() => handleToggleSubscription(user)}
+                        isLoading={togglingUserId === user.id}
+                        title={user.is_subscribed ? "Revogar assinatura" : "Ativar assinatura Pro"}
+                      >
+                        {togglingUserId === user.id ? null : user.is_subscribed ? (
+                          <><Shield className="h-3.5 w-3.5" /> Revogar</>
+                        ) : (
+                          <><Check className="h-3.5 w-3.5" /> Ativar Pro</>
+                        )}
                       </Button>
                     </td>
                   </tr>
@@ -202,7 +357,7 @@ export default function AdminUsers() {
               <div className="flex items-center justify-between p-6 border-b border-zinc-800">
                 <div>
                   <h2 className="text-base font-bold text-zinc-100">Criar Novo Usuário</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">Conta será criada com e-mail já verificado</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">Conta criada com e-mail verificado e plano Pro ativo</p>
                 </div>
                 <button
                   onClick={() => { setShowModal(false); setCreateError(""); setCreateSuccess(""); }}

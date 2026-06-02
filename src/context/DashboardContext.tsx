@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { getOrCreateBarbershop, Barbershop } from "@/lib/db";
-import { Scissors } from "lucide-react";
 
 interface DashboardContextType {
   barbershop: Barbershop | null;
@@ -51,11 +50,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     await fetchShop();
   };
 
-  if (authLoading || (user && loadingShop)) {
+  if ((authLoading || loadingShop) && !barbershop) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-obsidian-950 gap-4">
-        <div className="h-16 w-16 rounded-2xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-500 relative animate-pulse">
-          <Scissors className="h-8 w-8 rotate-90" />
+        <div className="relative animate-pulse">
+          <img src="/assets/logo.png" alt="BarberZap Logo" className="h-12 object-contain" />
         </div>
         <div className="flex flex-col items-center gap-1.5 text-center">
           <p className="text-sm font-semibold text-zinc-300">Carregando BarberZap...</p>

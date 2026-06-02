@@ -52,10 +52,9 @@ export default function LandingPage() {
       <header className="w-full border-b border-zinc-900/60 bg-obsidian-950/80 backdrop-blur-md sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-500 shadow-lg shadow-gold-500/5">
-              <Scissors className="h-5 w-5 rotate-90" />
-            </div>
-            <span className="text-lg font-black tracking-tight text-zinc-100">Barber<span className="text-gold-500">Zap</span></span>
+            <Link href="/" className="flex items-center">
+              <img src="/assets/logo.png" alt="BarberZap Logo" className="h-20 md:h-24 object-contain" />
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/barberzap" target="_blank" className="hidden sm:inline-block">
@@ -330,84 +329,76 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="bg-obsidian-900/30 border-y border-zinc-900/60 py-24">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="bg-obsidian-900/30 border-y border-zinc-900/60 py-24 relative overflow-hidden">
+        {/* Glow behind pricing */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl font-bold">Planos simples, <span className="text-gold-500">sem surpresas</span></h2>
-            <p className="text-sm text-zinc-400 mt-2">Escolha o plano que melhor se adapta à estrutura da sua barbearia. Cancele quando quiser.</p>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-[10px] text-gold-500 font-extrabold uppercase mb-4">
+              ✨ Preço Justo e Sem Surpresas
+            </div>
+            <h2 className="text-2xl md:text-4xl font-black tracking-tight text-zinc-100">
+              Acesso total por um <span className="text-gold-500">preço único</span>
+            </h2>
+            <p className="text-sm text-zinc-400 mt-3 max-w-lg mx-auto leading-relaxed">
+              Tudo o que sua barbearia precisa para crescer e fidelizar clientes, sem taxas ocultas ou limites de agendamento.
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Plano Free */}
-            <Card className="border-zinc-800/80 bg-obsidian-900/40 relative overflow-hidden transition-all duration-300 hover:border-zinc-700/85 hover:shadow-lg">
-              <CardContent className="p-8 text-center flex flex-col h-full justify-between">
-                <div>
-                  <div className="text-zinc-500 font-bold text-[10px] tracking-widest uppercase mb-2">PLANO INICIAL</div>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-black text-zinc-200">R$ 0</span>
-                    <span className="text-zinc-500 text-sm">/mês</span>
-                  </div>
-                  <p className="text-[10px] text-zinc-550 text-zinc-500 mt-1">Perfeito para começar a testar</p>
-                  <ul className="mt-6 space-y-3 text-left">
-                    {["Até 20 agendamentos/mês", "Página online da barbearia", "Agenda online intuitiva", "Painel de controle básico", "Suporte técnico via e-mail"].map((item, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-zinc-400"><Check className="h-4 w-4 text-zinc-650 text-zinc-500 shrink-0 mt-0.5" /> {item}</li>
-                    ))}
-                  </ul>
-                </div>
-                <Link href="/login">
-                  <Button variant="secondary" className="w-full mt-8 font-bold text-xs h-10 border-zinc-800 hover:bg-zinc-900 text-zinc-300">Começar Grátis</Button>
-                </Link>
-              </CardContent>
-            </Card>
 
-            {/* Plano Pro - Destaque */}
-            <Card className="border-gold-500 bg-obsidian-900 relative overflow-hidden transition-all duration-300 hover:shadow-xl ring-1 ring-gold-500/20">
-              <div className="absolute top-0 right-0 bg-gold-500 text-obsidian-950 text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">🔥 Recomendado</div>
-              <CardContent className="p-8 text-center flex flex-col h-full justify-between">
+          <div className="max-w-md mx-auto">
+            {/* Unified Plan Card */}
+            <Card className="border-gold-500/80 bg-obsidian-900/90 relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-gold-500/5 ring-1 ring-gold-500/25">
+              <div className="absolute top-0 right-0 bg-gold-500 text-obsidian-950 text-[10px] font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-wider">
+                Completo
+              </div>
+              
+              <CardContent className="p-8 md:p-10 text-center flex flex-col justify-between">
                 <div>
-                  <div className="text-gold-500 font-bold text-[10px] tracking-widest uppercase mb-2">PLANO PROFISSIONAL</div>
+                  <h3 className="text-zinc-400 font-black text-xs tracking-widest uppercase mb-3">PLANO PROFISSIONAL</h3>
+                  
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-5xl font-black text-gold-500">R$ 49</span>
+                    <span className="text-xs font-bold text-zinc-400 align-super">R$</span>
+                    <span className="text-5xl font-black text-gold-500 tracking-tight">19,90</span>
                     <span className="text-zinc-500 text-sm">/mês</span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 mt-1">Para profissionais independentes</p>
-                  <ul className="mt-6 space-y-3 text-left">
-                    {["Agendamentos ILIMITADOS", "Envio automatizado de WhatsApp", "Lembretes 24h e 2h antes", "Cartão Fidelidade digital integrado", "CRM de Clientes e Relatórios completos", "Suporte prioritário via WhatsApp"].map((item, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-zinc-200"><Check className="h-4 w-4 text-gold-500 shrink-0 mt-0.5" /> {item}</li>
+                  
+                  <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
+                    A automatização completa para sua barbearia faturar mais e evitar horários vazios.
+                  </p>
+                  
+                  <div className="h-px bg-zinc-800/60 my-6"></div>
+                  
+                  <ul className="space-y-3.5 text-left">
+                    {[
+                      "Agendamentos ilimitados para seus clientes",
+                      "Confirmação e lembretes automáticos via WhatsApp (24h e 2h antes)",
+                      "Cartão Fidelidade digital e incentivos automáticos",
+                      "CRM completo: cadastro de clientes e histórico de visitas",
+                      "Relatório financeiro, faturamento e picos de horários",
+                      "Suporte prioritário 1-1 via WhatsApp"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-xs text-zinc-200">
+                        <Check className="h-4 w-4 text-gold-500 shrink-0 mt-0.5" /> 
+                        <span>{item}</span>
+                      </li>
                     ))}
                   </ul>
                 </div>
-                <Link href="/login">
-                  <Button className="w-full mt-8 font-bold text-xs h-10 bg-gold-500 hover:bg-gold-600 text-obsidian-950">Testar 7 Dias Grátis</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Plano Premium */}
-            <Card className="border-zinc-800/80 bg-obsidian-900/40 relative overflow-hidden transition-all duration-300 hover:border-zinc-700/85 hover:shadow-lg">
-              <CardContent className="p-8 text-center flex flex-col h-full justify-between">
-                <div>
-                  <div className="text-zinc-500 font-bold text-[10px] tracking-widest uppercase mb-2">PLANO CORPORATIVO</div>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-black text-zinc-200">R$ 99</span>
-                    <span className="text-zinc-500 text-sm">/mês</span>
-                  </div>
-                  <p className="text-[10px] text-zinc-550 text-zinc-500 mt-1">Para barbearias com equipes</p>
-                  <ul className="mt-6 space-y-3 text-left">
-                    {["Tudo do plano profissional", "Multi-profissional (equipe)", "Agenda compartilhada com controle", "Configurações de comissões", "Painel administrativo de gerência", "Suporte VIP personalizado 1-1"].map((item, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-zinc-400"><Check className="h-4 w-4 text-zinc-650 text-zinc-500 shrink-0 mt-0.5" /> {item}</li>
-                    ))}
-                  </ul>
-                </div>
-                <Link href="/login">
-                  <Button variant="secondary" className="w-full mt-8 font-bold text-xs h-10 border-zinc-800 hover:bg-zinc-900 text-zinc-300">Escolher Premium</Button>
+                
+                <Link href="/login" className="w-full">
+                  <Button className="w-full mt-8 font-black text-xs h-11 bg-gold-500 hover:bg-gold-600 text-obsidian-950 shadow-lg shadow-gold-500/10 cursor-pointer">
+                    Começar Teste de 7 Dias Grátis
+                  </Button>
                 </Link>
               </CardContent>
             </Card>
           </div>
-          {/* Selos extras */}
-          <div className="flex justify-center gap-6 mt-12 text-[10px] text-zinc-550 text-zinc-500 font-medium">
-            <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5 text-gold-500" /> Sem taxa de cancelamento</span>
-            <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Upgrade ou Downgrade instantâneo</span>
+
+          {/* Trust badges */}
+          <div className="flex justify-center gap-6 mt-12 text-[10px] text-zinc-500 font-semibold">
+            <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5 text-gold-500" /> Sem fidelidade, cancele quando quiser</span>
+            <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Ativação imediata</span>
           </div>
         </div>
       </section>

@@ -16,7 +16,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, whatsapp: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
 }
@@ -28,12 +28,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
-  const latestRequestId = useRef(0);
 
   useEffect(() => {
-    const getInitialSession = async () => {
+    let active = true;
+
+    const initializeAuth = async () => {
       try {
+        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
+        if (!active) return;
+        
         if (session?.user) {
           setUser(session.user);
           await fetchProfile(session.user.id, session.user.email || "");
@@ -44,57 +48,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error("Erro ao carregar sessão inicial:", err);
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const requestId = ++latestRequestId.current;
-        setLoading(true);
+      async (event: any, session: any) => {
+        if (!active) return;
+
         if (session?.user) {
           setUser(session.user);
-          await fetchProfile(session.user.id, session.user.email || "");
+          setLoading(true);
+          try {
+            await fetchProfile(session.user.id, session.user.email || "");
+          } finally {
+            if (active) {
+              setLoading(false);
+            }
+          }
         } else {
           setUser(null);
           setProfile(null);
-        }
-        if (requestId === latestRequestId.current) {
           setLoading(false);
         }
       }
     );
 
     return () => {
+      active = false;
       subscription.unsubscribe();
     };
   }, []);
 
   const fetchProfile = async (userId: string, email: string) => {
+    const fallbackProfile = {
+      id: userId,
+      full_name: email.split("@")[0] || "Barbeiro",
+    };
+
     try {
-      const { data, error } = await supabase
+      const queryPromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout de conexão")), 2500);
+      });
+
+      const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+      const { data, error } = result;
 
       if (error) {
         console.warn("Erro ao carregar perfil (tabela pode não existir ainda):", error.message);
-        setProfile({
-          id: userId,
-          full_name: email.split("@")[0] || "Barbeiro",
-        });
+        setProfile(fallbackProfile);
       } else {
-        setProfile(data);
+        setProfile(data || fallbackProfile);
       }
-    } catch (err) {
-      console.error("Erro ao buscar perfil:", err);
-      setProfile({
-        id: userId,
-        full_name: email.split("@")[0] || "Barbeiro",
-      });
+    } catch (err: any) {
+      console.warn("Aviso ao buscar perfil (carregando dados locais):", err?.message || err);
+      setProfile(fallbackProfile);
     }
   };
 
@@ -110,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, whatsapp: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -118,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             full_name: fullName,
+            whatsapp,
           },
         },
       });
