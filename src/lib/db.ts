@@ -114,7 +114,11 @@ const isTableMissingError = (error: SupabaseError): boolean => {
 const isProduction = process.env.NODE_ENV === "production";
 
 export async function getOrCreateBarbershop(userId: string, defaultName: string): Promise<Barbershop> {
-  const defaultSlug = defaultName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  const makeSlug = (name: string) => {
+    const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const suffix = Math.random().toString(36).slice(2, 6);
+    return `${base}-${suffix}`;
+  };
 
   try {
     const { data, error } = await supabase
@@ -129,17 +133,20 @@ export async function getOrCreateBarbershop(userId: string, defaultName: string)
       throw error;
     }
 
+    // Barbearia já existe (criada no signUp) — retorna imediatamente
     if (data) return data as Barbershop;
 
+    // Barbearia ainda não existe: cria com slug único
+    const firstName = defaultName.split(" ").find(w => !["barbearia", "de", "do", "da"].includes(w.toLowerCase())) || defaultName.split(" ")[0];
     const newBarber: Barbershop = {
       id: crypto.randomUUID(),
       user_id: userId,
       name: defaultName,
-      slug: defaultSlug,
+      slug: makeSlug(firstName),
       description: "Sua barbearia moderna com agendamento rápido.",
-      address: "Rua das Barbearias, 123",
-      whatsapp: "5511999999999",
-      instagram: "barberzap",
+      address: "",
+      whatsapp: "",
+      instagram: "",
     };
 
     const { data: created, error: createErr } = await supabase
@@ -148,7 +155,20 @@ export async function getOrCreateBarbershop(userId: string, defaultName: string)
       .select()
       .single();
 
-    if (createErr) throw createErr;
+    if (createErr) {
+      // Se foi colisão de slug, tenta de novo com outro sufixo
+      if (createErr.code === "23505") {
+        newBarber.slug = makeSlug(firstName);
+        const { data: retried, error: retryErr } = await supabase
+          .from("barbershops")
+          .insert(newBarber)
+          .select()
+          .single();
+        if (retryErr) throw retryErr;
+        return retried as Barbershop;
+      }
+      throw createErr;
+    }
     return created as Barbershop;
 
   } catch (err) {
@@ -160,11 +180,11 @@ export async function getOrCreateBarbershop(userId: string, defaultName: string)
         id: crypto.randomUUID(),
         user_id: userId,
         name: defaultName,
-        slug: defaultSlug,
-        description: "Sua barbearia moderna com agendamento rápido (Modo de Demonstração).",
-        address: "Rua das Barbearias, 123",
-      whatsapp: "556699762785",
-        instagram: "barberzap",
+        slug: makeSlug(defaultName.split(" ")[0]),
+        description: "Sua barbearia moderna com agendamento rápido.",
+        address: "",
+        whatsapp: "",
+        instagram: "",
       };
       localShops.push(myShop);
       setLocalData("barbershops", localShops);

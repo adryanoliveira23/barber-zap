@@ -84,7 +84,7 @@ export default function LandingPage() {
               Sua barbearia no <span className="text-gold-500">piloto automático</span>
             </h1>
             
-            <p className="text-sm md:text-base text-zinc-400 mt-5 leading-relaxed max-w-lg">
+            <p className="text-sm md:text-base text-zinc-100 mt-5 leading-relaxed max-w-lg">
               Automatize seus agendamentos, envie lembretes automáticos via WhatsApp e fidelize clientes com um sistema simples que roda direto no celular.
             </p>
             

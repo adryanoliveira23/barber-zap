@@ -141,22 +141,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (!error && data.user) {
+      if (error) return { error };
+
+      if (data.user) {
+        const userId = data.user.id;
+
+        // 1. Upsert profile
         try {
           await supabase.from("profiles").upsert({
-            id: data.user.id,
+            id: userId,
             full_name: fullName,
           });
         } catch (e) {
-          console.warn("Erro ao fazer upsert manual de perfil:", e);
+          console.warn("Erro ao fazer upsert de perfil:", e);
+        }
+
+        // 2. Criar barbearia — slug com sufixo aleatório para evitar colisão
+        const firstName = fullName.split(" ")[0] || "Barbeiro";
+        const shopName = `Barbearia de ${firstName}`;
+        const randomSuffix = Math.random().toString(36).slice(2, 6);
+        const slug = `${firstName.toLowerCase().replace(/[^a-z0-9]/g, "")}-${randomSuffix}`;
+
+        let barbershopId: string | null = null;
+        try {
+          const newShop = {
+            id: crypto.randomUUID(),
+            user_id: userId,
+            name: shopName,
+            slug,
+            description: "Sua barbearia moderna com agendamento rápido.",
+            address: "",
+            whatsapp: whatsapp.replace(/\D/g, ""),
+            instagram: "",
+          };
+          const { data: createdShop, error: shopErr } = await supabase
+            .from("barbershops")
+            .insert(newShop)
+            .select()
+            .single();
+
+          if (shopErr) {
+            console.warn("Erro ao criar barbearia no signup:", shopErr.message);
+          } else {
+            barbershopId = createdShop.id;
+          }
+        } catch (e) {
+          console.warn("Erro inesperado ao criar barbearia:", e);
+        }
+
+        // 3. Criar serviços padrão
+        if (barbershopId) {
+          const defaultServices = [
+            { name: "Corte Social", price: 40, duration: 30, description: "Corte clássico na tesoura e máquina." },
+            { name: "Corte Degradê", price: 50, duration: 40, description: "Degradê moderno com transições suaves." },
+            { name: "Barba Completa", price: 35, duration: 30, description: "Toalha quente, navalha e hidratante." },
+            { name: "Combo Cabelo + Barba", price: 75, duration: 60, description: "Combo completo com toalha quente." },
+          ].map((s) => ({
+            id: crypto.randomUUID(),
+            barbershop_id: barbershopId,
+            ...s,
+            active: true,
+          }));
+
+          try {
+            await supabase.from("services").insert(defaultServices);
+          } catch (e) {
+            console.warn("Erro ao criar serviços padrão:", e);
+          }
         }
       }
 
-      return { error };
+      return { error: null };
     } catch (err: any) {
       return { error: err };
     }
   };
+
 
   const signOut = async () => {
     try {
