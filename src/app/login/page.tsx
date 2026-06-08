@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
 
 function LoginContent() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -23,7 +23,7 @@ function LoginContent() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  
+
   const { signIn, signUp, resetPassword, user } = useAuth();
   const router = useRouter();
   const { success, error, info } = useToast();
@@ -46,10 +46,13 @@ function LoginContent() {
     }
   }, [user, router]);
 
-  // Checar se veio de uma redefinição de senha
+  // Checar se veio de uma redefinição de senha ou quer criar conta
   useEffect(() => {
     if (searchParams.get("reset") === "true") {
       success("Senha redefinida com sucesso!", "Por favor, faça login com sua nova senha.");
+    }
+    if (searchParams.get("tab") === "signup") {
+      setIsLogin(false);
     }
   }, [searchParams, success]);
 
@@ -141,25 +144,21 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-obsidian-950 px-4 relative overflow-hidden">
-      {/* Background elements */}
       <div className="absolute top-0 -left-40 w-96 h-96 bg-gold-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 -right-40 w-96 h-96 bg-gold-500/5 rounded-full blur-[120px] pointer-events-none" />
 
+      {/* Voltar para o site - fixo no canto superior esquerdo */}
+      <a href="/" className="fixed top-5 left-5 z-20 inline-flex items-center gap-1.5 text-xs font-bold text-gold-500 bg-gold-500/10 border border-gold-500/20 hover:bg-gold-500/20 hover:border-gold-500/30 rounded-lg p-2 md:px-3 md:py-1.5 transition-all">
+        <ArrowLeft className="h-4 w-4" />
+        <span className="hidden md:inline">Voltar para o site</span>
+      </a>
+
       <div className="w-full max-w-md z-10 flex flex-col items-center">
-        {/* Voltar para o site */}
-        <div className="w-full mb-4">
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-gold-500 transition-colors">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Voltar para o site
-          </Link>
-        </div>
+        {/* Brand Logo */}
+        <a href="/" className="flex items-center mb-6 select-none group">
+          <img src="/assets/logo.png" alt="BarberZap Logo" className="h-20 md:h-24 object-contain group-hover:scale-105 transition-transform" />
+        </a>
 
-        {/* Brand Logo clicável */}
-        <Link href="/" className="flex items-center mb-8 select-none group">
-          <img src="/assets/logo.png" alt="BarberZap Logo" className="h-24 md:h-28 object-contain group-hover:scale-105 transition-transform" />
-        </Link>
-
-        {/* Forgot Password Section */}
         <AnimatePresence mode="wait">
           {showForgot ? (
             <motion.div
@@ -180,16 +179,14 @@ function LoginContent() {
                     <Input
                       type="email"
                       label="E-mail profissional"
-                      placeholder="seuemail@provedor.com"
+                      placeholder="seuemail@email.com"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       required
                     />
-
                     <Button type="submit" isLoading={loading} className="w-full mt-2">
                       Enviar Link de Recuperação
                     </Button>
-
                     <Button
                       type="button"
                       variant="ghost"
@@ -212,29 +209,27 @@ function LoginContent() {
             >
               <Card className="glass-panel">
                 <CardContent className="pt-6">
-                  {/* Tab Selector */}
+                  {/* Tab Selector - Criar Conta como padrão */}
                   <div className="grid grid-cols-2 p-1 bg-obsidian-950/80 border border-zinc-800/30 rounded-xl mb-6">
                     <button
                       type="button"
-                      onClick={() => handleTabChange(true)}
-                      className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                        isLogin
-                          ? "bg-gold-500 text-obsidian-950 shadow-md"
-                          : "text-zinc-400 hover:text-zinc-200"
-                      }`}
+                      onClick={() => handleTabChange(false)}
+                      className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${!isLogin
+                        ? "bg-gold-500 text-obsidian-950 shadow-md"
+                        : "text-zinc-400 hover:text-zinc-200"
+                        }`}
                     >
-                      Entrar
+                      Criar Conta
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleTabChange(false)}
-                      className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                        !isLogin
-                          ? "bg-gold-500 text-obsidian-950 shadow-md"
-                          : "text-zinc-400 hover:text-zinc-200"
-                      }`}
+                      onClick={() => handleTabChange(true)}
+                      className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${isLogin
+                        ? "bg-gold-500 text-obsidian-950 shadow-md"
+                        : "text-zinc-400 hover:text-zinc-200"
+                        }`}
                     >
-                      Criar Conta
+                      Entrar
                     </button>
                   </div>
 
@@ -278,7 +273,7 @@ function LoginContent() {
                     <Input
                       type="email"
                       label="E-mail profissional"
-                      placeholder="seuemail@provedor.com"
+                      placeholder="seuemail@email.com"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
@@ -356,10 +351,19 @@ function LoginContent() {
 
               {/* Footer Help */}
               <div className="mt-6 flex flex-col items-center gap-1.5 text-center px-4">
-                <p className="text-xs text-zinc-500 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-gold-500" />
-                  Pronto para profissionalizar sua barbearia hoje?
-                </p>
+                {!isLogin ? (
+                  <p className="text-xs text-zinc-500">
+                    Já tem conta?{" "}
+                    <button type="button" onClick={() => handleTabChange(true)} className="text-gold-500 hover:underline font-bold cursor-pointer">
+                      Faça login
+                    </button>
+                  </p>
+                ) : (
+                  <p className="text-xs text-zinc-500 flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-gold-500" />
+                    Pronto para profissionalizar sua barbearia hoje?
+                  </p>
+                )}
                 <p className="text-[10px] text-zinc-600 leading-normal">
                   Ao continuar, você concorda com nossos Termos de Serviço. BarberZap MVP conectado à nuvem Supabase.
                 </p>

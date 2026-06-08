@@ -2,17 +2,17 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { 
-  Scissors, 
-  Check, 
-  Calendar, 
-  ArrowRight, 
-  MessageSquare, 
-  Award, 
-  Star, 
-  Sparkles, 
-  Smartphone, 
-  Users, 
+import {
+  Scissors,
+  Check,
+  Calendar,
+  ArrowRight,
+  MessageSquare,
+  Award,
+  Star,
+  Sparkles,
+  Smartphone,
+  Users,
   Clock,
   HelpCircle,
   TrendingUp,
@@ -23,8 +23,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import BookingSimulator from "@/components/BookingSimulator";
+import WhatsAppChatDemo from "@/components/WhatsAppChatDemo";
 
 export default function LandingPage() {
+  const [isScrolled, setIsScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+    }
+
+    const handleScroll = () => {
+      requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 60);
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    if (window.scrollY > 60) {
+      setIsScrolled(true);
+    }
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const benefits = [
     { icon: Calendar, title: "Sem conflitos de horário", desc: "Seus clientes veem sua agenda em tempo real e marcam direto no celular, sem precisar trocar mensagens no WhatsApp." },
     { icon: MessageSquare, title: "Redução de faltas em até 80%", desc: "Disparo automático de lembretes no WhatsApp 24h e 2h antes. Redução drástica de no-show." },
@@ -49,19 +72,18 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen w-full bg-obsidian-950 text-zinc-300 antialiased selection:bg-gold-500/25 selection:text-gold-300">
       {/* Header */}
-      <header className="w-full border-b border-zinc-900/60 bg-obsidian-950/80 backdrop-blur-md sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header
+        className={`w-full border-b border-gold-500/10 bg-obsidian-950/85 backdrop-blur-md sticky top-0 z-20 transition-transform duration-300 ease-in-out ${isScrolled ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center">
-              <img src="/assets/logo.png" alt="BarberZap Logo" className="h-20 md:h-24 object-contain" />
+              <img src="/assets/logo.png" alt="BarberZap Logo" className="h-9 md:h-11 object-contain" />
             </Link>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/barberzap" target="_blank" className="hidden sm:inline-block">
-              <Button variant="ghost" className="text-xs px-4 py-2 hover:bg-zinc-900">Demo Cliente</Button>
-            </Link>
-            <Link href="/login">
-              <Button className="text-xs px-5 py-2">Entrar</Button>
+          <div className="flex items-center gap-2">
+            <Link href="/login?tab=signup">
+              <Button variant="ghost" className="text-xs px-3 py-1.5 hover:bg-zinc-900">Criar Conta</Button>
             </Link>
           </div>
         </div>
@@ -69,7 +91,6 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 py-8 md:py-12 relative overflow-hidden">
-        {/* Decorative ambient gradients */}
         <div className="absolute top-1/4 right-0 w-80 h-80 bg-gold-500/5 rounded-full blur-3xl -z-10"></div>
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl -z-10"></div>
 
@@ -79,24 +100,24 @@ export default function LandingPage() {
               <Sparkles className="h-3.5 w-3.5" />
               Evite furos na agenda e no-shows
             </div>
-            
+
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight text-zinc-100">
               Sua barbearia no <span className="text-gold-500">piloto automático</span>
             </h1>
-            
+
             <p className="text-sm md:text-base text-zinc-100 mt-5 leading-relaxed max-w-lg">
               Automatize seus agendamentos, envie lembretes automáticos via WhatsApp e fidelize clientes com um sistema simples que roda direto no celular.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link href="/login">
-                <Button size="lg" className="font-bold gap-2 text-sm h-12 shadow-lg shadow-gold-500/10">
-                  Começar Teste Grátis <ArrowRight className="h-4 w-4" />
+              <a href="#planos">
+                <Button size="lg" className="font-bold gap-2 text-sm h-12 shadow-lg shadow-gold-500/10 bg-gradient-to-r from-gold-500 to-gold-600 text-obsidian-950 hover:from-gold-400 hover:to-gold-500">
+                  Quero o Aplicativo <ArrowRight className="h-4 w-4" />
                 </Button>
-              </Link>
-              <Link href="/barberzap" target="_blank">
+              </a>
+              <Link href="/login?tab=signup">
                 <Button size="lg" variant="secondary" className="text-sm h-12 border-zinc-800 hover:bg-zinc-900">
-                  Visualizar Como Cliente
+                  Começar Teste Grátis
                 </Button>
               </Link>
             </div>
@@ -106,9 +127,8 @@ export default function LandingPage() {
               <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Teste de 7 dias</span>
             </div>
           </div>
-          
+
           <div className="flex justify-center items-center">
-            {/* Real Interactive Booking Simulator */}
             <div className="w-full flex flex-col items-center">
               <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest mb-3 bg-zinc-900/60 px-3 py-1 rounded-full border border-zinc-800/80">
                 👉 Toque para experimentar
@@ -147,7 +167,7 @@ export default function LandingPage() {
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
             Tudo o que sua barbearia precisa para <span className="text-gold-500">crescer</span>
           </h2>
-          <p className="text-sm text-zinc-550 text-zinc-400 mt-3 leading-relaxed">
+          <p className="text-sm text-zinc-400 mt-3 leading-relaxed">
             Elimine processos manuais, organize seu financeiro e pare de perder clientes por falta de resposta no WhatsApp.
           </p>
         </div>
@@ -163,7 +183,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-zinc-200 text-base">{item.title}</h3>
-                    <p className="text-xs text-zinc-550 text-zinc-400 mt-2 leading-relaxed">{item.desc}</p>
+                    <p className="text-xs text-zinc-400 mt-2 leading-relaxed">{item.desc}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -186,85 +206,9 @@ export default function LandingPage() {
               O sistema se comunica automaticamente com o seu cliente. Menos burocracia, mais eficiência e zero esquecimento.
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1: Confirmação */}
-            <div className="bg-obsidian-900/40 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-500 font-bold px-2 py-0.5 rounded-full uppercase">Passo 1</span>
-                  <span className="text-[10px] text-zinc-500 font-bold">Imediato</span>
-                </div>
-                <h3 className="font-bold text-zinc-200 text-sm mb-3">Confirmação Instantânea</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed mb-6">
-                  Assim que o cliente escolhe o horário na sua página, ele recebe uma notificação com o resumo da reserva e opções de localização.
-                </p>
-              </div>
-              {/* Mock Whatsapp Bubble */}
-              <div className="bg-zinc-900 border border-zinc-800/80 rounded-xl p-3.5 flex gap-3 text-left">
-                <div className="h-7 w-7 rounded-lg bg-emerald-500 flex items-center justify-center text-zinc-950 shrink-0 font-bold">
-                  <MessageSquare className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-black text-zinc-300">BarberZap</div>
-                  <p className="text-[9px] text-zinc-400 mt-1 leading-normal font-medium">
-                    Olá Alessandro! Seu horário de <span className="text-gold-500 font-bold">Corte + Barba</span> está confirmado na Barbearia do Carlos para amanhã às <span className="text-zinc-100 font-bold">14:00</span>. ✂️
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            {/* Card 2: Lembrete 24h */}
-            <div className="bg-obsidian-900/40 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-500 font-bold px-2 py-0.5 rounded-full uppercase">Passo 2</span>
-                  <span className="text-[10px] text-zinc-500 font-bold">24h antes</span>
-                </div>
-                <h3 className="font-bold text-zinc-200 text-sm mb-3">Lembrete de Antecedência</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed mb-6">
-                  Enviado um dia antes para que o cliente possa confirmar a presença ou liberar a agenda caso precise remarcar.
-                </p>
-              </div>
-              {/* Mock Whatsapp Bubble */}
-              <div className="bg-zinc-900 border border-zinc-800/80 rounded-xl p-3.5 flex gap-3 text-left">
-                <div className="h-7 w-7 rounded-lg bg-emerald-500 flex items-center justify-center text-zinc-950 shrink-0 font-bold">
-                  <MessageSquare className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-black text-zinc-300">BarberZap</div>
-                  <p className="text-[9px] text-zinc-400 mt-1 leading-normal font-medium">
-                    Olá Alessandro! Lembramos do seu horário amanhã às <span className="text-zinc-100 font-bold">14:00</span>. Responda <span className="text-gold-500 font-bold">1</span> para Confirmar ou <span className="text-red-400 font-bold">2</span> para Cancelar.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Lembrete 2h */}
-            <div className="bg-obsidian-900/40 border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-500 font-bold px-2 py-0.5 rounded-full uppercase">Passo 3</span>
-                  <span className="text-[10px] text-zinc-500 font-bold">2h antes</span>
-                </div>
-                <h3 className="font-bold text-zinc-200 text-sm mb-3">Lembrete de Última Hora</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed mb-6">
-                  Enviado duas horas antes do corte, garantindo que o cliente se lembre do compromisso e evite atrasos no seu dia de trabalho.
-                </p>
-              </div>
-              {/* Mock Whatsapp Bubble */}
-              <div className="bg-zinc-900 border border-zinc-800/80 rounded-xl p-3.5 flex gap-3 text-left">
-                <div className="h-7 w-7 rounded-lg bg-emerald-500 flex items-center justify-center text-zinc-950 shrink-0 font-bold">
-                  <MessageSquare className="h-4 w-4 fill-current" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-black text-zinc-300">BarberZap</div>
-                  <p className="text-[9px] text-zinc-400 mt-1 leading-normal font-medium">
-                    Alessandro, seu horário está chegando! Nos vemos às <span className="text-zinc-100 font-bold">14:00</span> na barbearia. Clique aqui para abrir a rota no Waze: wa.me/route
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="w-full">
+            <WhatsAppChatDemo />
           </div>
         </div>
       </section>
@@ -274,13 +218,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-2xl md:text-3xl font-bold">Como funciona em <span className="text-gold-500">4 passos</span></h2>
-            <p className="text-sm text-zinc-550 text-zinc-400 mt-2">Do cadastro ao seu primeiro agendamento em menos de 5 minutos</p>
+            <p className="text-sm text-zinc-400 mt-2">Do cadastro ao seu primeiro agendamento em menos de 5 minutos</p>
           </div>
           <div className="grid md:grid-cols-4 gap-6">
             {steps.map((step, i) => (
               <Card key={i} className="bg-obsidian-900/20 border-zinc-800/80 text-center hover:border-gold-500/20 transition-colors">
                 <CardContent className="p-6">
-                  <div className="w-10 h-10 rounded-full bg-gold-500/10 text-gold-500 flex items-center justify-center font-bold text-base mx-auto mb-4 border border-gold-500/20">{i+1}</div>
+                  <div className="w-10 h-10 rounded-full bg-gold-500/10 text-gold-500 flex items-center justify-center font-bold text-base mx-auto mb-4 border border-gold-500/20">{i + 1}</div>
                   <h3 className="font-bold text-zinc-200 text-sm">{step.title}</h3>
                   <p className="text-xs text-zinc-400 mt-2 leading-relaxed">{step.desc}</p>
                 </CardContent>
@@ -297,16 +241,16 @@ export default function LandingPage() {
             <h2 className="text-2xl md:text-3xl font-bold">Por que escolher o <span className="text-gold-500">BarberZap</span>?</h2>
             <ul className="mt-6 space-y-3">
               {differentiators.map((item, i) => (
-                <li key={i} className="flex gap-2 text-sm text-zinc-355 text-zinc-400">
+                <li key={i} className="flex gap-2 text-sm text-zinc-400">
                   <Check className="h-5 w-5 text-gold-500 shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-8 self-start">
-              <Link href="/login">
-                <Button size="lg" className="font-bold text-sm h-12">Começar agora →</Button>
-              </Link>
+              <a href="#planos">
+                <Button size="lg" className="font-bold text-sm h-12">Quero o Aplicativo →</Button>
+              </a>
             </div>
           </div>
           <div className="bg-obsidian-900/40 border border-zinc-800/85 rounded-2xl p-6 text-left">
@@ -329,8 +273,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="bg-obsidian-900/30 border-y border-zinc-900/60 py-24 relative overflow-hidden">
-        {/* Glow behind pricing */}
+      <section id="planos" className="bg-obsidian-900/30 border-y border-zinc-900/60 py-24 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -339,66 +282,89 @@ export default function LandingPage() {
               ✨ Preço Justo e Sem Surpresas
             </div>
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-zinc-100">
-              Acesso total por um <span className="text-gold-500">preço único</span>
+              Escolha o plano ideal para sua <span className="text-gold-500">barbearia</span>
             </h2>
             <p className="text-sm text-zinc-400 mt-3 max-w-lg mx-auto leading-relaxed">
               Tudo o que sua barbearia precisa para crescer e fidelizar clientes, sem taxas ocultas ou limites de agendamento.
             </p>
           </div>
 
-          <div className="max-w-md mx-auto">
-            {/* Unified Plan Card */}
-            <Card className="border-gold-500/80 bg-obsidian-900/90 relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-gold-500/5 ring-1 ring-gold-500/25">
-              <div className="absolute top-0 right-0 bg-gold-500 text-obsidian-950 text-[10px] font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-wider">
-                Completo
-              </div>
-              
-              <CardContent className="p-8 md:p-10 text-center flex flex-col justify-between">
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex items-center bg-obsidian-900/80 border border-zinc-800 rounded-full p-1 text-xs font-bold">
+              <button className="px-5 py-2 rounded-full bg-zinc-800/60 text-zinc-400 cursor-not-allowed">Mensal</button>
+              <button className="px-5 py-2 rounded-full bg-gradient-to-r from-gold-500 to-gold-600 text-obsidian-950 shadow-lg shadow-gold-500/20 cursor-pointer flex items-center gap-1.5">
+                Semanal <span className="text-[9px] bg-obsidian-950/20 px-1.5 py-0.5 rounded-full font-black">-70%</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* PLANO SEMANAL */}
+            <Card className="border-gold-500/80 bg-obsidian-900/90 relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-gold-500/10 ring-1 ring-gold-500/25 md:scale-105 md:-translate-y-2">
+              <div className="absolute top-0 right-0 bg-gold-500 text-obsidian-950 text-[10px] font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-wider">🔥 Mais Popular</div>
+              <CardContent className="p-7 md:p-8 text-center flex flex-col justify-between h-full">
                 <div>
-                  <h3 className="text-zinc-400 font-black text-xs tracking-widest uppercase mb-3">PLANO PROFISSIONAL</h3>
-                  
+                  <h3 className="text-zinc-400 font-black text-xs tracking-widest uppercase mb-3">PLANO SEMANAL</h3>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-xs font-bold text-zinc-400 align-super">R$</span>
-                    <span className="text-5xl font-black text-gold-500 tracking-tight">19,90</span>
-                    <span className="text-zinc-500 text-sm">/mês</span>
+                    <span className="text-6xl font-black text-gold-500 tracking-tight">5</span>
+                    <span className="text-2xl font-black text-gold-500">,99</span>
+                    <span className="text-zinc-500 text-sm">/semana</span>
                   </div>
-                  
-                  <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
-                    A automatização completa para sua barbearia faturar mais e evitar horários vazios.
-                  </p>
-                  
-                  <div className="h-px bg-zinc-800/60 my-6"></div>
-                  
-                  <ul className="space-y-3.5 text-left">
-                    {[
-                      "Agendamentos ilimitados para seus clientes",
-                      "Confirmação e lembretes automáticos via WhatsApp (24h e 2h antes)",
-                      "Cartão Fidelidade digital e incentivos automáticos",
-                      "CRM completo: cadastro de clientes e histórico de visitas",
-                      "Relatório financeiro, faturamento e picos de horários",
-                      "Suporte prioritário 1-1 via WhatsApp"
-                    ].map((item, i) => (
+                  <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">Perfeito para testar ou para período de alta demanda. Sem fidelidade, cancele quando quiser.</p>
+                  <div className="h-px bg-zinc-800/60 my-5"></div>
+                  <ul className="space-y-2.5 text-left">
+                    {["Agendamentos ilimitados", "Lembretes automáticos via WhatsApp (24h e 2h antes)", "Cartão Fidelidade digital", "CRM completo de clientes", "Página de agendamento personalizada", "Suporte via WhatsApp"].map((item, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-xs text-zinc-200">
-                        <Check className="h-4 w-4 text-gold-500 shrink-0 mt-0.5" /> 
+                        <Check className="h-4 w-4 text-gold-500 shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-                
-                <Link href="/login" className="w-full">
-                  <Button className="w-full mt-8 font-black text-xs h-11 bg-gold-500 hover:bg-gold-600 text-obsidian-950 shadow-lg shadow-gold-500/10 cursor-pointer">
-                    Começar Teste de 7 Dias Grátis
-                  </Button>
-                </Link>
+                <a href="https://pay.cakto.com.br/qbf9j65_918041" target="_blank" rel="noopener noreferrer" className="w-full mt-6 font-black text-xs h-12 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-obsidian-950 shadow-lg shadow-gold-500/30 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl transition-all hover:scale-[1.02]">
+                  Assinar Plano Semanal <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </CardContent>
+            </Card>
+
+            {/* PLANO MENSAL */}
+            <Card className="border-zinc-700/60 bg-obsidian-900/70 relative overflow-hidden transition-all duration-300 hover:border-gold-500/40 hover:shadow-xl">
+              <div className="absolute top-0 right-0 bg-zinc-800 text-zinc-300 text-[10px] font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-wider">Mensal</div>
+              <CardContent className="p-7 md:p-8 text-center flex flex-col justify-between h-full">
+                <div>
+                  <h3 className="text-zinc-400 font-black text-xs tracking-widest uppercase mb-3">PLANO MENSAL</h3>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-xs font-bold text-zinc-400 align-super">R$</span>
+                    <span className="text-5xl font-black text-zinc-100 tracking-tight">19</span>
+                    <span className="text-2xl font-black text-zinc-100">,90</span>
+                    <span className="text-zinc-500 text-sm">/mês</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-800/60 border border-zinc-700/50 mt-2">
+                    <span className="text-[10px] text-zinc-400 font-black uppercase tracking-wider">Cobrança mensal</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">A escolha ideal para quem quer todos os recursos premium com economia em relação ao plano semanal.</p>
+                  <div className="h-px bg-zinc-800/60 my-5"></div>
+                  <ul className="space-y-2.5 text-left">
+                    {["Tudo do Plano Semanal +", "Relatórios financeiros avançados", "Métricas de ocupação em tempo real", "Suporte prioritário 1-1 via WhatsApp", "Gestão de comissões por barbeiro", "Acesso antecipado a novos recursos"].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-xs text-zinc-200">
+                        <Check className="h-4 w-4 text-gold-500 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <a href="https://pay.cakto.com.br/qbf9j65_918041" target="_blank" rel="noopener noreferrer" className="w-full mt-6 font-black text-xs h-12 bg-zinc-800 hover:bg-gold-500 text-zinc-100 hover:text-obsidian-950 border border-zinc-700 hover:border-gold-500 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl transition-all hover:scale-[1.02]">
+                  Assinar Plano Mensal <ArrowRight className="h-3.5 w-3.5" />
+                </a>
               </CardContent>
             </Card>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex justify-center gap-6 mt-12 text-[10px] text-zinc-500 font-semibold">
+          <div className="flex justify-center gap-6 mt-12 text-[10px] text-zinc-500 font-semibold flex-wrap">
             <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5 text-gold-500" /> Sem fidelidade, cancele quando quiser</span>
             <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Ativação imediata</span>
+            <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Pagamento seguro via Cakto</span>
           </div>
         </div>
       </section>
@@ -407,46 +373,27 @@ export default function LandingPage() {
       <section className="bg-obsidian-950 py-24">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Perguntas <span className="text-gold-500">Frequentes</span>
-            </h2>
-            <p className="text-sm text-zinc-400 mt-3">
-              Tudo o que você precisa saber sobre o funcionamento do BarberZap
-            </p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Perguntas <span className="text-gold-500">Frequentes</span></h2>
+            <p className="text-sm text-zinc-400 mt-3">Tudo o que você precisa saber sobre o funcionamento do BarberZap</p>
           </div>
-          
+
           <div className="space-y-4">
-            <FAQItem 
-              question="O cliente precisa baixar algum aplicativo?"
-              answer="Não. O seu cliente acessa a sua página de agendamentos online diretamente pelo navegador do celular ou computador, bastando clicar no link enviado ou disponível na sua bio do Instagram. É rápido, intuitivo e sem senhas."
-            />
-            <FAQItem 
-              question="Como funcionam os envios de mensagens por WhatsApp?"
-              answer="O envio de confirmações e lembretes automáticos é 100% nativo do sistema BarberZap. Nós fornecemos os servidores e a infraestrutura para disparar as mensagens diretamente para o número do cliente, sem custos adicionais nos planos Pro e Premium."
-            />
-            <FAQItem 
-              question="Posso cadastrar mais profissionais na mesma barbearia?"
-              answer="Sim! O plano Corporativo (Premium) é perfeito para equipes. Você pode cadastrar múltiplos profissionais, configurar horários de trabalho e comissões individuais, além de gerenciar a agenda compartilhada no mesmo dashboard."
-            />
-            <FAQItem 
-              question="Existe taxa de fidelidade ou cancelamento?"
-              answer="Nenhuma. Você pode cancelar sua assinatura a qualquer momento diretamente pelo seu painel, sem taxas escondidas, sem fidelidade contratual e sem burocracia."
-            />
-            <FAQItem 
-              question="É possível gerenciar cartão fidelidade no sistema?"
-              answer="Sim! O BarberZap possui um sistema de fidelidade digital completo. Cada agendamento finalizado acumula selos automaticamente no número de WhatsApp do cliente. Quando ele alcança a meta configurada, o sistema notifica que ele ganhou um corte grátis!"
-            />
+            <FAQItem question="O cliente precisa baixar algum aplicativo?" answer="Não. O seu cliente acessa a sua página de agendamentos online diretamente pelo navegador do celular ou computador, bastando clicar no link enviado ou disponível na sua bio do Instagram. É rápido, intuitivo e sem senhas." />
+            <FAQItem question="Como funcionam os envios de mensagens por WhatsApp?" answer="O envio de confirmações e lembretes automáticos é 100% nativo do sistema BarberZap. Nós fornecemos os servidores e a infraestrutura para disparar as mensagens diretamente para o número do cliente, sem custos adicionais nos planos Pro e Premium." />
+            <FAQItem question="Posso cadastrar mais profissionais na mesma barbearia?" answer="Sim! O plano Corporativo (Premium) é perfeito para equipes. Você pode cadastrar múltiplos profissionais, configurar horários de trabalho e comissões individuais, além de gerenciar a agenda compartilhada no mesmo dashboard." />
+            <FAQItem question="Existe taxa de fidelidade ou cancelamento?" answer="Nenhuma. Você pode cancelar sua assinatura a qualquer momento, sem taxas escondidas, sem fidelidade contratual e sem burocracia. Oferecemos dois planos flexíveis: o Semanal de R$ 5,99 (ideal para testar ou para alta demanda) e o Mensal de R$ 19,90 (com todos os recursos premium incluídos)." />
+            <FAQItem question="É possível gerenciar cartão fidelidade no sistema?" answer="Sim! O BarberZap possui um sistema de fidelidade digital completo. Cada agendamento finalizado acumula selos automaticamente no número de WhatsApp do cliente. Quando ele alcança a meta configurada, o sistema notifica que ele ganhou um corte grátis!" />
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-900/60 py-8 text-center text-xs text-zinc-650 text-zinc-500 bg-obsidian-950">
+      <footer className="border-t border-zinc-900/60 py-8 text-center text-xs text-zinc-500 bg-obsidian-950">
         <div className="max-w-7xl mx-auto px-6">
           <p>© 2026 BarberZap — Sistema de agendamento online para barbearias</p>
           <div className="flex justify-center gap-4 mt-2">
-            <Link href="/login" className="hover:text-zinc-350 hover:text-zinc-300">Login</Link>
-            <Link href="/barberzap" target="_blank" className="hover:text-zinc-350 hover:text-zinc-300">Demo Cliente</Link>
+            <Link href="/login" className="hover:text-zinc-300">Login</Link>
+            <Link href="/barberzap" target="_blank" className="hover:text-zinc-300">Demo Cliente</Link>
           </div>
         </div>
       </footer>
@@ -454,7 +401,7 @@ export default function LandingPage() {
   );
 }
 
-// Inner Accordion FAQ Component
+// FAQ Accordion Component
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -464,9 +411,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         className="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-obsidian-900/40 transition-colors cursor-pointer"
       >
         <span className="font-bold text-sm text-zinc-200">{question}</span>
-        <span className={`text-gold-500 font-bold transition-transform duration-300 text-lg ${isOpen ? "rotate-45" : ""}`}>
-          +
-        </span>
+        <span className={`text-gold-500 font-bold transition-transform duration-300 text-lg ${isOpen ? "rotate-45" : ""}`}>+</span>
       </button>
       <AnimatePresence initial={false}>
         {isOpen && (
@@ -476,9 +421,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <div className="px-6 pb-5 pt-1 text-xs text-zinc-400 leading-relaxed border-t border-zinc-900/30">
-              {answer}
-            </div>
+            <div className="px-6 pb-5 pt-1 text-xs text-zinc-400 leading-relaxed border-t border-zinc-900/30">{answer}</div>
           </motion.div>
         )}
       </AnimatePresence>

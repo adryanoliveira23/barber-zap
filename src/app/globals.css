@@ -10,7 +10,8 @@
   --color-gold-200: #fde68a;
   --color-gold-300: #fcd34d;
   --color-gold-400: #fbbf24;
-  --color-gold-500: #f59e0b; /* Amarelo Dourado Vibrante */
+  --color-gold-500: #f59e0b;
+  /* Amarelo Dourado Vibrante */
   --color-gold-600: #d97706;
   --color-gold-700: #b45309;
   --color-gold-800: #92400e;
@@ -108,6 +109,13 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #f59e0b;
+}
+
+/* Previne scroll restoration problemático durante hidratação */
+html,
+body {
+  overflow-anchor: none;
+  scroll-anchor: none;
 }
 
 /* Animations and Utilities */

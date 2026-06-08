@@ -484,10 +484,10 @@ export default function PublicBookingPage() {
                                   <div
                                     key={i}
                                     className={`h-9 rounded-lg flex items-center justify-center border text-xs font-semibold ${isStamped
-                                        ? "bg-gold-500 border-gold-500 text-obsidian-950"
-                                        : stampNumber === 10
-                                          ? "bg-gold-500/5 border-dashed border-gold-500/20 text-gold-500"
-                                          : "bg-obsidian-900 border-zinc-850 text-zinc-650"
+                                      ? "bg-gold-500 border-gold-500 text-obsidian-950"
+                                      : stampNumber === 10
+                                        ? "bg-gold-500/5 border-dashed border-gold-500/20 text-gold-500"
+                                        : "bg-obsidian-900 border-zinc-850 text-zinc-650"
                                       }`}
                                   >
                                     {isStamped ? (
@@ -569,8 +569,8 @@ export default function PublicBookingPage() {
                                 key={s.id}
                                 onClick={() => handleToggleService(s)}
                                 className={`p-4 rounded-xl border flex justify-between items-start text-left transition-all cursor-pointer ${isSelected
-                                    ? "bg-gold-500/10 border-gold-500 ring-1 ring-gold-500/20"
-                                    : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 hover:bg-gold-500/5"
+                                  ? "bg-gold-500/10 border-gold-500 ring-1 ring-gold-500/20"
+                                  : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 hover:bg-gold-500/5"
                                   }`}
                               >
                                 <div className="flex flex-col gap-1 min-w-0 pr-4">
@@ -639,8 +639,8 @@ export default function PublicBookingPage() {
                                 setStep(3); // Avançar direto
                               }}
                               className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${isSelected
-                                  ? "bg-gold-500 text-obsidian-950 border-gold-500 font-bold shadow-lg shadow-gold-500/20"
-                                  : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 text-zinc-400 hover:text-zinc-200"
+                                ? "bg-gold-500 text-obsidian-950 border-gold-500 font-bold shadow-lg shadow-gold-500/20"
+                                : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 text-zinc-400 hover:text-zinc-200"
                                 }`}
                             >
                               <span className={`text-[9px] uppercase tracking-wider font-bold ${isSelected ? "text-obsidian-950 opacity-90" : "text-zinc-550 text-zinc-500"}`}>{day.weekday}</span>
@@ -686,8 +686,8 @@ export default function PublicBookingPage() {
                                   setStep(4);
                                 }}
                                 className={`py-3 rounded-lg border text-xs font-bold transition-all cursor-pointer ${isSelected
-                                    ? "bg-gold-500 text-obsidian-950 border-gold-500 shadow-lg shadow-gold-500/20"
-                                    : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 hover:bg-gold-500/5 text-zinc-300 hover:text-zinc-100"
+                                  ? "bg-gold-500 text-obsidian-950 border-gold-500 shadow-lg shadow-gold-500/20"
+                                  : "bg-obsidian-900/50 border-zinc-800/80 hover:border-gold-500/30 hover:bg-gold-500/5 text-zinc-300 hover:text-zinc-100"
                                   }`}
                               >
                                 {time}

@@ -19,6 +19,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, whatsapp: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         if (!active) return;
-        
+
         if (session?.user) {
           setUser(session.user);
           await fetchProfile(session.user.id, session.user.email || "");
@@ -240,6 +241,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshSession = async () => {
+    try {
+      setLoading(true);
+      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) throw refreshError;
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id, session.user.email || "");
+      }
+    } catch (err: any) {
+      console.error("Erro ao atualizar sessão:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -250,6 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         resetPassword,
+        refreshSession,
       }}
     >
       {children}

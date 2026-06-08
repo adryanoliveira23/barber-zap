@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/toast";
@@ -16,21 +16,72 @@ import {
   Clock,
   ExternalLink,
   MessageCircle,
+  RefreshCw,
+  SearchCheck,
+  ArrowRight,
 } from "lucide-react";
 
 export default function SubscriptionPage() {
-  const { user } = useAuth();
-  const { success, error } = useToast();
+  const { user, refreshSession } = useAuth();
+  const { success, error, info } = useToast();
   const supabase = createClient();
 
   const [loading, setLoading] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (user?.user_metadata) {
       setIsSubscribed(!!user.user_metadata.is_subscribed);
     }
   }, [user]);
+
+  // Polling automático: se voltou da Cakto mas ainda não está subscribed
+  useEffect(() => {
+    // Verificar se veio de um retorno do checkout (presença de return_url params)
+    const cameFromCheckout = document.referrer.includes("pay.cakto.com.br") ||
+      window.location.search.includes("checkout=return");
+
+    if (cameFromCheckout && !isSubscribed && user?.email) {
+      info("Verificando Pagamento", "Identificamos que você voltou do checkout. Verificando se o pagamento foi confirmado...");
+
+      // Polling a cada 5 segundos por até 2 minutos
+      let attempts = 0;
+      const maxAttempts = 24; // 2 minutos
+
+      pollingRef.current = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await fetch(`/api/subscription/status?email=${encodeURIComponent(user.email!)}`);
+          const data = await res.json();
+
+          if (data.is_subscribed) {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            pollingRef.current = null;
+            setIsSubscribed(true);
+            await refreshSession();
+            success("Pagamento Confirmado!", "Sua assinatura Pro foi ativada com sucesso. Aproveite todos os recursos!");
+          }
+        } catch (e) {
+          console.error("Polling error:", e);
+        }
+
+        if (attempts >= maxAttempts && pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+          info("Ainda processando?", "O pagamento pode levar alguns minutos para ser confirmado. Clique em 'Já paguei' para verificar novamente.");
+        }
+      }, 5000);
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, []); // Roda apenas na montagem do componente
 
   const trialInfo = useMemo(() => {
     if (!user?.created_at) return { days: 7, expired: false };
@@ -44,6 +95,40 @@ export default function SubscriptionPage() {
       expired: diffDays <= 0,
     };
   }, [user]);
+
+  const handleCheckPayment = async () => {
+    if (!user?.email) {
+      error("Erro", "Email do usuário não encontrado.");
+      return;
+    }
+
+    setCheckingPayment(true);
+    try {
+      const res = await fetch(`/api/subscription/status?email=${encodeURIComponent(user.email)}`);
+      const data = await res.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.is_subscribed) {
+        setIsSubscribed(true);
+        // Força refresh da sessão para atualizar os metadados no frontend
+        await refreshSession();
+        success("Assinatura Ativa!", "Seu plano Pro está ativo. Aproveite todos os recursos!");
+      } else {
+        info(
+          "Pagamento não encontrado",
+          "Ainda não identificamos sua assinatura. O pagamento pode levar alguns minutos para ser processado. Se já pagou, aguarde e tente novamente em instantes."
+        );
+      }
+    } catch (err: any) {
+      console.error(err);
+      error("Erro ao verificar", err.message || "Não foi possível verificar o status do pagamento.");
+    } finally {
+      setCheckingPayment(false);
+    }
+  };
 
   const handleToggleSimulation = async () => {
     setLoading(true);
@@ -83,7 +168,7 @@ export default function SubscriptionPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-10">
-      
+
       {/* Page Title */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-500">
@@ -98,12 +183,12 @@ export default function SubscriptionPage() {
       </div>
 
       <div className="grid md:grid-cols-5 gap-6">
-        
+
         {/* Left Side: Plan Status details */}
         <div className="md:col-span-3 flex flex-col gap-6">
           <Card className="border-zinc-800/80 bg-obsidian-900/40 relative overflow-hidden">
             <CardContent className="p-6 flex flex-col gap-6">
-              
+
               {/* Status Badge */}
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-zinc-400">Status do Plano</span>
@@ -131,8 +216,8 @@ export default function SubscriptionPage() {
                   {isSubscribed
                     ? "Sua barbearia está no modo Premium!"
                     : trialInfo.expired
-                    ? "Seu período de teste grátis expirou"
-                    : "Aproveite seu período de Teste Grátis"}
+                      ? "Seu período de teste grátis expirou"
+                      : "Aproveite seu período de Teste Grátis"}
                 </h3>
                 <p className="text-xs text-zinc-400 leading-normal">
                   {isSubscribed
@@ -150,15 +235,16 @@ export default function SubscriptionPage() {
                     <span className="text-zinc-500 text-xs">/mês</span>
                   </div>
                 </div>
-                
+
                 <span className="text-[10px] text-zinc-500 font-medium">Faturamento recorrente via Cakto</span>
               </div>
 
-              {/* Checkout CTA */}
+              {/* Checkout CTA + Payment Verification */}
               {!isSubscribed && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
+                  {/* Botão de Assinar com return_url */}
                   <a
-                    href="https://pay.cakto.com.br/8odd28u_908528"
+                    href={`https://pay.cakto.com.br/8odd28u_908528?return_url=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : ""}/dashboard/subscription?checkout=return`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full"
@@ -168,8 +254,29 @@ export default function SubscriptionPage() {
                       <ExternalLink className="h-4 w-4 ml-1.5" />
                     </Button>
                   </a>
+
+                  {/* Botão para verificar pagamento já realizado */}
+                  <Button
+                    variant="secondary"
+                    onClick={handleCheckPayment}
+                    disabled={checkingPayment}
+                    className="w-full h-10 text-xs border-gold-500/30 text-gold-500 hover:bg-gold-500/5 cursor-pointer"
+                  >
+                    {checkingPayment ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+                        Verificando...
+                      </>
+                    ) : (
+                      <>
+                        <SearchCheck className="h-4 w-4 mr-1.5" />
+                        Já paguei! Verificar Assinatura
+                      </>
+                    )}
+                  </Button>
+
                   <p className="text-[10px] text-zinc-500 text-center">
-                    Ao assinar, você será redirecionado para a página segura de pagamentos da Cakto.
+                    Ao assinar, você será redirecionado para a página segura de pagamentos da Cakto. Volte aqui e clique em "Já paguei" para ativar automaticamente.
                   </p>
                 </div>
               )}
@@ -241,7 +348,13 @@ export default function SubscriptionPage() {
               <div>
                 <h4 className="text-[10px] font-bold text-zinc-200">Como a assinatura é confirmada?</h4>
                 <p className="text-[9px] text-zinc-500 leading-normal mt-0.5">
-                  Ao assinar na Cakto com o mesmo e-mail de login do BarberZap, nosso sistema recebe a confirmação e ativa sua licença na mesma hora.
+                  Ao assinar na Cakto com o mesmo e-mail de login do BarberZap, nosso sistema recebe a confirmação e ativa sua licença na mesma hora. Volte ao painel e clique em "Já paguei" para liberar automaticamente.
+                </p>
+              </div>
+              <div>
+                <h4 className="text-[10px] font-bold text-zinc-200">E se o pagamento não for reconhecido?</h4>
+                <p className="text-[9px] text-zinc-500 leading-normal mt-0.5">
+                  O webhook de confirmação pode levar até 2 minutos. Se passar desse tempo, entre em contato conosco pelo WhatsApp que ativamos manualmente.
                 </p>
               </div>
               <div>
