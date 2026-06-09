@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import BookingSimulator from "@/components/BookingSimulator";
 import WhatsAppChatDemo from "@/components/WhatsAppChatDemo";
+import WhatsAppHeroDemo from "@/components/WhatsAppHeroDemo";
 import UtmifyScript from "@/components/UtmifyScript";
 
 export default function LandingPage() {
@@ -126,7 +127,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="secondary"
-                className="text-xs sm:text-sm px-4 sm:px-6 h-10 sm:h-12 border-zinc-800 hover:bg-zinc-900"
+                className="font-bold gap-2 text-sm h-12 border-zinc-800 hover:bg-zinc-900"
                 onClick={() => {
                   const el = document.getElementById("demonstracao");
                   if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -144,10 +145,11 @@ export default function LandingPage() {
 
           <div className="flex justify-center items-center">
             <div className="w-full flex flex-col items-center">
-              <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest mb-3 bg-zinc-900/60 px-3 py-1 rounded-full border border-zinc-800/80">
-                👉 Toque para experimentar
-              </span>
-              <BookingSimulator />
+              <WhatsAppHeroDemo />
+              <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Lembrete automático sendo enviado agora
+              </div>
             </div>
           </div>
         </div>
@@ -206,23 +208,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo Section */}
+      {/* Demo Section - Agendamento Interativo */}
       <section id="demonstracao" className="bg-obsidian-900/20 border-y border-zinc-900/60 py-24 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-500 font-extrabold uppercase mb-4">
-              <Zap className="h-3 w-3" /> Comunicação sem esforço
+              <Zap className="h-3 w-3" /> Agende em 30 segundos
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Como funciona o <span className="text-gold-500">WhatsApp Integrado</span>
+              Teste o <span className="text-gold-500">simulador de agendamento</span>
             </h2>
             <p className="text-sm text-zinc-400 mt-3 leading-relaxed">
-              O sistema se comunica automaticamente com o seu cliente. Menos burocracia, mais eficiência e zero esquecimento.
+              Experimente como é fácil para o seu cliente marcar um horário. Simples, rápido e sem precisar baixar nada.
             </p>
           </div>
 
-          <div className="w-full">
-            <WhatsAppChatDemo />
+          <div className="w-full flex justify-center">
+            <BookingSimulator />
           </div>
         </div>
       </section>
