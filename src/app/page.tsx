@@ -33,7 +33,16 @@ export default function LandingPage() {
       window.history.scrollRestoration = "manual";
     }
     if (typeof window !== "undefined") {
-      window.scrollTo(0, 0);
+      const hash = window.location.hash;
+      if (hash) {
+        // Aguarda o DOM estar pronto e rola até a âncora
+        setTimeout(() => {
+          const el = document.querySelector(hash);
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      } else {
+        window.scrollTo(0, 0);
+      }
     }
 
     const handleScroll = () => {
