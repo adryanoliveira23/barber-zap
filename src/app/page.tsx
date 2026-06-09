@@ -354,7 +354,7 @@ export default function LandingPage() {
                     ))}
                   </ul>
                 </div>
-                <a href="https://pay.cakto.com.br/qbf9j65_918041" target="_blank" rel="noopener noreferrer" className="w-full mt-6 font-black text-xs h-12 bg-zinc-800 hover:bg-gold-500 text-zinc-100 hover:text-obsidian-950 border border-zinc-700 hover:border-gold-500 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl transition-all hover:scale-[1.02]">
+                <a href="https://pay.cakto.com.br/8odd28u_908528" target="_blank" rel="noopener noreferrer" className="w-full mt-6 font-black text-xs h-12 bg-zinc-800 hover:bg-gold-500 text-zinc-100 hover:text-obsidian-950 border border-zinc-700 hover:border-gold-500 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl transition-all hover:scale-[1.02]">
                   Assinar Plano Mensal <ArrowRight className="h-3.5 w-3.5" />
                 </a>
               </CardContent>
