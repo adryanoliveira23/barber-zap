@@ -33,15 +33,10 @@ export default function LandingPage() {
       window.history.scrollRestoration = "manual";
     }
     if (typeof window !== "undefined") {
-      const hash = window.location.hash;
-      if (hash) {
-        // Aguarda o DOM estar pronto e rola até a âncora
-        setTimeout(() => {
-          const el = document.querySelector(hash);
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      } else {
-        window.scrollTo(0, 0);
+      window.scrollTo(0, 0);
+      // Limpa qualquer hash da URL sem recarregar a página
+      if (window.location.hash) {
+        window.history.replaceState(null, "", window.location.pathname);
       }
     }
 
@@ -127,11 +122,17 @@ export default function LandingPage() {
                   Quero o Aplicativo <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
-              <a href="#demonstracao">
-                <Button size="lg" variant="secondary" className="text-sm h-12 border-zinc-800 hover:bg-zinc-900">
-                  Ver Demonstração
-                </Button>
-              </a>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="text-sm h-12 border-zinc-800 hover:bg-zinc-900"
+                onClick={() => {
+                  const el = document.getElementById("demonstracao");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                Ver Demonstração
+              </Button>
             </div>
 
             <div className="flex items-center gap-4 mt-6 text-xs text-zinc-500 font-medium">
