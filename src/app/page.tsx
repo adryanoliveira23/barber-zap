@@ -82,8 +82,11 @@ export default function LandingPage() {
             </Link>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/login">
+              <Button variant="ghost" className="text-xs px-3 py-1.5 hover:bg-zinc-900">Entrar</Button>
+            </Link>
             <Link href="/login?tab=signup">
-              <Button variant="ghost" className="text-xs px-3 py-1.5 hover:bg-zinc-900">Criar Conta</Button>
+              <Button size="sm" className="text-xs px-3 py-1.5 bg-gradient-to-r from-gold-500 to-gold-600 text-obsidian-950 font-bold hover:from-gold-400 hover:to-gold-500">Criar Conta</Button>
             </Link>
           </div>
         </div>
@@ -115,11 +118,11 @@ export default function LandingPage() {
                   Quero o Aplicativo <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
-              <Link href="/login?tab=signup">
+              <a href="#demonstracao">
                 <Button size="lg" variant="secondary" className="text-sm h-12 border-zinc-800 hover:bg-zinc-900">
                   Ver Demonstração
                 </Button>
-              </Link>
+              </a>
             </div>
 
             <div className="flex items-center gap-4 mt-6 text-xs text-zinc-500 font-medium">
@@ -192,8 +195,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* WhatsApp Flow Section */}
-      <section className="bg-obsidian-900/20 border-y border-zinc-900/60 py-24 relative">
+      {/* Demo Section */}
+      <section id="demonstracao" className="bg-obsidian-900/20 border-y border-zinc-900/60 py-24 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-500 font-extrabold uppercase mb-4">
