@@ -126,7 +126,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="secondary"
-                className="text-sm h-12 border-zinc-800 hover:bg-zinc-900"
+                className="text-xs sm:text-sm px-4 sm:px-6 h-10 sm:h-12 border-zinc-800 hover:bg-zinc-900"
                 onClick={() => {
                   const el = document.getElementById("demonstracao");
                   if (el) el.scrollIntoView({ behavior: "smooth" });
