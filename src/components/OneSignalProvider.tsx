@@ -38,7 +38,7 @@ export default function OneSignalProvider() {
           appId: ONESIGNAL_APP_ID,
           safari_web_id: ONESIGNAL_SAFARI_WEB_ID,
           allowLocalhostAsSecureOrigin: false, // Não precisa para produção
-          notifyButton: { enable: true },
+          notifyButton: { enable: false },
           serviceWorkerPath: "/OneSignalSDKWorker.js",
         });
       } catch (err) {
