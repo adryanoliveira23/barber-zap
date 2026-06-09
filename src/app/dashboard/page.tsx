@@ -38,15 +38,6 @@ export default function DashboardPage() {
 
   const isSubscribed = user?.user_metadata?.is_subscribed === true;
 
-  const trialDaysRemaining = useMemo(() => {
-    if (!user?.created_at) return 7;
-    const createdDate = new Date(user.created_at);
-    const trialEndDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const today = new Date();
-    const diffTime = trialEndDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  }, [user]);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -262,36 +253,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-10">
-      {/* Teste Grátis Banner */}
-      {!isSubscribed && (
-        <Card className="border-amber-500/20 bg-amber-500/5 relative overflow-hidden transition-all duration-300">
-          <CardContent className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
-                <Clock className="h-5 w-5 animate-pulse" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-amber-400">
-                  {trialDaysRemaining > 0
-                    ? `Período de Teste Grátis: ${trialDaysRemaining} ${
-                        trialDaysRemaining === 1 ? "dia restante" : "dias restantes"
-                      }`
-                    : "Seu Período de Teste Grátis expirou!"}
-                </h4>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  Adquira o Plano Pro hoje mesmo para garantir que seu link de agendamentos e lembretes automáticos continuem ativos.
-                </p>
-              </div>
-            </div>
 
-            <a href="/dashboard/subscription" className="w-full sm:w-auto shrink-0">
-              <Button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-obsidian-950 font-extrabold text-xs h-9 cursor-pointer">
-                Adquirir Plano Pro
-              </Button>
-            </a>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Banner de Compartilhamento / Link de Agendamento */}
       {barbershop && (

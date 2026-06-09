@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
@@ -34,26 +33,6 @@ export const metadata: Metadata = {
   },
 };
 
-const BACK_REDIRECT_LINK = "https://meubackredirect.com.br";
-
-function setBackRedirect(url: string) {
-  let urlBackRedirect = url;
-  urlBackRedirect =
-    urlBackRedirect.trim() +
-    (urlBackRedirect.indexOf("?") > 0 ? "&" : "?") +
-    document.location.search.replace("?", "").toString();
-
-  history.pushState({}, "", location.href);
-  history.pushState({}, "", location.href);
-  history.pushState({}, "", location.href);
-
-  window.addEventListener("popstate", () => {
-    console.log("onpopstate", urlBackRedirect);
-    setTimeout(() => {
-      location.href = urlBackRedirect;
-    }, 1);
-  });
-}
 
 export default function RootLayout({
   children,
@@ -77,31 +56,7 @@ export default function RootLayout({
         {/* UTMify - injetado via cliente para não quebrar hidratação */}
         <UtmifyScript />
 
-        {/* Back Redirect Script - Previne perda de lead ao sair */}
-        <Script id="back-redirect" strategy="afterInteractive">
-          {`
-            const link = "${BACK_REDIRECT_LINK}";
-            function setBackRedirect(url) {
-              let urlBackRedirect = url;
-              urlBackRedirect =
-                urlBackRedirect.trim() +
-                (urlBackRedirect.indexOf("?") > 0 ? "&" : "?") +
-                document.location.search.replace("?", "").toString();
 
-              history.pushState({}, "", location.href);
-              history.pushState({}, "", location.href);
-              history.pushState({}, "", location.href);
-
-              window.addEventListener("popstate", () => {
-                console.log("onpopstate", urlBackRedirect);
-                setTimeout(() => {
-                  location.href = urlBackRedirect;
-                }, 1);
-              });
-            }
-            setBackRedirect(link);
-          `}
-        </Script>
       </body>
     </html>
   );

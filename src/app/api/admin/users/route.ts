@@ -16,12 +16,7 @@ const getAdminClient = () => {
 
 function getTrialStatus(createdAt: string, isSubscribed: boolean) {
   if (isSubscribed) return { status: "subscribed", daysRemaining: null };
-  const created = new Date(createdAt);
-  const trialEnd = new Date(created.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const now = new Date();
-  const diff = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff <= 0) return { status: "expired", daysRemaining: 0 };
-  return { status: "trial", daysRemaining: diff };
+  return { status: "expired", daysRemaining: null };
 }
 
 export async function GET() {

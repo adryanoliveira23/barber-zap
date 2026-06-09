@@ -30,7 +30,13 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Refresh token if needed
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user || null;
+  } catch (err) {
+    console.warn("Auth middleware refresh failed:", err);
+  }
 
   // Route protection rules
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
@@ -45,9 +51,7 @@ export async function updateSession(request: NextRequest) {
 
     const isSubscriptionRoute = request.nextUrl.pathname === '/dashboard/subscription';
     const isSubscribed = !!user?.user_metadata?.is_subscribed;
-    const createdTime = user?.created_at ? new Date(user.created_at).getTime() : 0;
-    const isTrialActive = createdTime ? (createdTime + 7 * 24 * 60 * 60 * 1000) > Date.now() : false;
-    const hasAccess = isSubscribed || isTrialActive;
+    const hasAccess = isSubscribed;
 
     if (!hasAccess && !isSubscriptionRoute) {
       const url = request.nextUrl.clone();
@@ -59,9 +63,7 @@ export async function updateSession(request: NextRequest) {
   if (isLoginRoute && user) {
     const url = request.nextUrl.clone();
     const isSubscribed = !!user?.user_metadata?.is_subscribed;
-    const createdTime = user?.created_at ? new Date(user.created_at).getTime() : 0;
-    const isTrialActive = createdTime ? (createdTime + 7 * 24 * 60 * 60 * 1000) > Date.now() : false;
-    const hasAccess = isSubscribed || isTrialActive;
+    const hasAccess = isSubscribed;
     url.pathname = hasAccess ? '/dashboard' : '/dashboard/subscription';
     return NextResponse.redirect(url);
   }

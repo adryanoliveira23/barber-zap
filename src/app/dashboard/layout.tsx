@@ -32,10 +32,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
 
   const isSubscribed = !!user?.user_metadata?.is_subscribed;
-  const isTrialActive = user?.created_at
-    ? new Date(user.created_at).getTime() + 7 * 24 * 60 * 60 * 1000 > Date.now()
-    : false;
-  const hasAccess = isSubscribed || isTrialActive;
+  const hasAccess = isSubscribed;
   const isSubscriptionPage = pathname === "/dashboard/subscription";
 
   React.useEffect(() => {

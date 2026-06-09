@@ -55,7 +55,7 @@ export default function LandingPage() {
   ];
 
   const steps = [
-    { title: "Cadastre sua barbearia", desc: "Preencha seus dados básicos em 2 minutos. Teste grátis sem cartão de crédito." },
+    { title: "Cadastre sua barbearia", desc: "Preencha seus dados básicos em 2 minutos. Comece agora mesmo." },
     { title: "Configure horários e serviços", desc: "Adicione os preços, a duração de cada serviço e os barbeiros da sua equipe." },
     { title: "Divulgue o seu link único", desc: "Adicione o link da sua agenda na bio do Instagram ou envie por mensagem automática." },
     { title: "Veja sua agenda rodar sozinha", desc: "Monitore os agendamentos, o faturamento e a fidelidade em um painel completo." },
@@ -117,14 +117,14 @@ export default function LandingPage() {
               </a>
               <Link href="/login?tab=signup">
                 <Button size="lg" variant="secondary" className="text-sm h-12 border-zinc-800 hover:bg-zinc-900">
-                  Começar Teste Grátis
+                  Começar Agora
                 </Button>
               </Link>
             </div>
 
             <div className="flex items-center gap-4 mt-6 text-xs text-zinc-500 font-medium">
-              <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Sem cartão</span>
-              <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Teste de 7 dias</span>
+              <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Ativação Imediata</span>
+              <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5 text-gold-500" /> Suporte Integrado</span>
             </div>
           </div>
 
@@ -393,7 +393,6 @@ export default function LandingPage() {
           <p>© 2026 BarberZap — Sistema de agendamento online para barbearias</p>
           <div className="flex justify-center gap-4 mt-2">
             <Link href="/login" className="hover:text-zinc-300">Login</Link>
-            <Link href="/barberzap" target="_blank" className="hover:text-zinc-300">Demo Cliente</Link>
           </div>
         </div>
       </footer>

@@ -83,18 +83,7 @@ export default function SubscriptionPage() {
     };
   }, []); // Roda apenas na montagem do componente
 
-  const trialInfo = useMemo(() => {
-    if (!user?.created_at) return { days: 7, expired: false };
-    const createdDate = new Date(user.created_at);
-    const trialEndDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const today = new Date();
-    const diffTime = trialEndDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return {
-      days: Math.max(0, diffDays),
-      expired: diffDays <= 0,
-    };
-  }, [user]);
+
 
   const handleCheckPayment = async () => {
     if (!user?.email) {
@@ -147,7 +136,7 @@ export default function SubscriptionPage() {
         newStatus ? "Simulação Ativada!" : "Simulação Desativada!",
         newStatus
           ? "Seu perfil foi marcado como assinante Pro com sucesso."
-          : "Seu perfil retornou ao status de teste pendente."
+          : "Seu perfil retornou ao status de assinatura inativa."
       );
     } catch (err: any) {
       console.error(err);
@@ -197,15 +186,10 @@ export default function SubscriptionPage() {
                     <Sparkles className="h-3.5 w-3.5 fill-current animate-pulse" />
                     Assinatura Ativa (Pro)
                   </span>
-                ) : trialInfo.expired ? (
+                ) : (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-extrabold uppercase">
                     <Clock className="h-3.5 w-3.5" />
-                    Teste Grátis Expirado
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-extrabold uppercase">
-                    <Clock className="h-3.5 w-3.5 animate-pulse" />
-                    Teste Grátis ({trialInfo.days} {trialInfo.days === 1 ? "dia restante" : "dias restantes"})
+                    Assinatura Inativa
                   </span>
                 )}
               </div>
@@ -215,14 +199,12 @@ export default function SubscriptionPage() {
                 <h3 className="text-base font-bold text-zinc-100">
                   {isSubscribed
                     ? "Sua barbearia está no modo Premium!"
-                    : trialInfo.expired
-                      ? "Seu período de teste grátis expirou"
-                      : "Aproveite seu período de Teste Grátis"}
+                    : "Assinatura Requerida"}
                 </h3>
                 <p className="text-xs text-zinc-400 leading-normal">
                   {isSubscribed
                     ? "Parabéns! Sua conta possui acesso completo e irrestrito a todas as funcionalidades do BarberZap, incluindo lembretes via WhatsApp e painel de estatísticas."
-                    : "Você possui 7 dias de acesso grátis para experimentar todos os recursos. Para continuar com seu link de autoagendamento online ativo após esse período e garantir o envio de notificações WhatsApp automáticas, assine o plano Pro."}
+                    : "Para ativar o seu link de autoagendamento online e garantir o envio de notificações automáticas via WhatsApp, assine o plano Pro."}
                 </p>
               </div>
 

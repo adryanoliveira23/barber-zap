@@ -29,18 +29,10 @@ function SubscriptionBadge({ user }: { user: UserWithBarbershop }) {
       </span>
     );
   }
-  if (user.subscription_status === "trial") {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-400 uppercase tracking-wide">
-        <Clock className="h-2.5 w-2.5 animate-pulse" />
-        Teste {user.trial_days_remaining}d
-      </span>
-    );
-  }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-bold text-red-400 uppercase tracking-wide">
       <AlertCircle className="h-2.5 w-2.5" />
-      Expirado
+      Inativo
     </span>
   );
 }
@@ -49,7 +41,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<UserWithBarbershop[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "subscribed" | "trial_expired">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "subscribed" | "inactive">("all");
   const [showModal, setShowModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -137,14 +129,13 @@ export default function AdminUsers() {
     
     if (statusFilter === "all") return matchesSearch;
     if (statusFilter === "subscribed") return matchesSearch && user.subscription_status === "subscribed";
-    if (statusFilter === "trial_expired") return matchesSearch && user.subscription_status !== "subscribed";
+    if (statusFilter === "inactive") return matchesSearch && user.subscription_status !== "subscribed";
     return matchesSearch;
   });
 
   // Stats por status
   const subscribedCount = users.filter(u => u.subscription_status === "subscribed").length;
-  const trialCount = users.filter(u => u.subscription_status === "trial").length;
-  const expiredCount = users.filter(u => u.subscription_status === "expired").length;
+  const inactiveCount = users.filter(u => u.subscription_status !== "subscribed").length;
 
   if (loading) {
     return (
@@ -182,26 +173,19 @@ export default function AdminUsers() {
       </div>
 
       {/* Status Summary Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15 flex items-center gap-3">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15 flex items-center gap-3">
           <Sparkles className="h-5 w-5 text-emerald-400 fill-current shrink-0" />
           <div>
             <p className="text-xs text-zinc-500 font-medium">Assinantes Pro</p>
             <p className="text-lg font-black text-emerald-400">{subscribedCount}</p>
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 flex items-center gap-3">
-          <Clock className="h-5 w-5 text-amber-400 shrink-0" />
-          <div>
-            <p className="text-xs text-zinc-500 font-medium">Teste Grátis</p>
-            <p className="text-lg font-black text-amber-400">{trialCount}</p>
-          </div>
-        </div>
-        <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/15 flex items-center gap-3">
+        <div className="p-3.5 rounded-xl bg-red-500/5 border border-red-500/15 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
           <div>
-            <p className="text-xs text-zinc-500 font-medium">Expirados</p>
-            <p className="text-lg font-black text-red-400">{expiredCount}</p>
+            <p className="text-xs text-zinc-500 font-medium">Inativos / Aguardando Pagamento</p>
+            <p className="text-lg font-black text-red-400">{inactiveCount}</p>
           </div>
         </div>
       </div>
@@ -230,15 +214,15 @@ export default function AdminUsers() {
           Assinantes Pro ({subscribedCount})
         </button>
         <button
-          onClick={() => setStatusFilter("trial_expired")}
+          onClick={() => setStatusFilter("inactive")}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-            statusFilter === "trial_expired"
-              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+            statusFilter === "inactive"
+              ? "bg-red-500/10 text-red-400 border border-red-500/20"
               : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          <Clock className="h-3 w-3" />
-          Aguardando Pagamento / Teste ({trialCount + expiredCount})
+          <AlertCircle className="h-3 w-3" />
+          Inativos ({inactiveCount})
         </button>
       </div>
 
