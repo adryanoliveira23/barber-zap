@@ -117,7 +117,7 @@ export default function LandingPage() {
               </a>
               <Link href="/login?tab=signup">
                 <Button size="lg" variant="secondary" className="text-sm h-12 border-zinc-800 hover:bg-zinc-900">
-                  Começar Agora
+                  Ver Demonstração
                 </Button>
               </Link>
             </div>
