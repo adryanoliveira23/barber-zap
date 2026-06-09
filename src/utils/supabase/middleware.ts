@@ -41,6 +41,14 @@ export async function updateSession(request: NextRequest) {
   // Route protection rules
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
   const isLoginRoute = request.nextUrl.pathname.startsWith('/login');
+  const isRootRoute = request.nextUrl.pathname === '/';
+
+  // Se está logado e abre a landing page, vai direto pro dashboard
+  if (isRootRoute && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
 
   if (isDashboardRoute) {
     if (!user) {
@@ -60,13 +68,6 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  if (isLoginRoute && user) {
-    const url = request.nextUrl.clone();
-    const isSubscribed = !!user?.user_metadata?.is_subscribed;
-    const hasAccess = isSubscribed;
-    url.pathname = hasAccess ? '/dashboard' : '/dashboard/subscription';
-    return NextResponse.redirect(url);
-  }
 
   return supabaseResponse;
 }

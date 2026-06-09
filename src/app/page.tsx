@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import BookingSimulator from "@/components/BookingSimulator";
 import WhatsAppChatDemo from "@/components/WhatsAppChatDemo";
+import UtmifyScript from "@/components/UtmifyScript";
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -409,6 +410,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      <UtmifyScript />
     </div>
   );
 }

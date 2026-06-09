@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
 import OneSignalProvider from "@/components/OneSignalProvider";
-import UtmifyScript from "@/components/UtmifyScript";
+
 
 // Extend window type for OneSignal
 declare global {
@@ -52,9 +52,6 @@ export default function RootLayout({
             {children}
           </ToastProvider>
         </AuthProvider>
-
-        {/* UTMify - injetado via cliente para não quebrar hidratação */}
-        <UtmifyScript />
 
 
       </body>
