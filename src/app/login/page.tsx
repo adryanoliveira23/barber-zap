@@ -29,15 +29,15 @@ function LoginContent() {
   const { success, error, info } = useToast();
   const searchParams = useSearchParams();
 
-  // Carregar dados salvos no mount
+  // Carregar dados salvos no mount (apenas na aba de login)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedEmail = localStorage.getItem("barberzap_remembered_email");
       const savedPassword = localStorage.getItem("barberzap_remembered_password");
       if (savedEmail) setEmail(savedEmail);
-      if (savedPassword) setPassword(savedPassword);
+      if (savedPassword && isLogin) setPassword(savedPassword);
     }
-  }, []);
+  }, [isLogin]);
 
   // Se o usuário já estiver logado, redirecionar
   useEffect(() => {

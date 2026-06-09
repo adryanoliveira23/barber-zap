@@ -114,6 +114,24 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`[Cakto Webhook] User ${email} subscription set to: ${newSubscriptionStatus}`);
+
+    // Disparar e-mail de boas-vindas da assinatura Pro (não bloqueante)
+    if (newSubscriptionStatus) {
+      const barbershopName = user.user_metadata?.full_name
+        ? `Barbearia de ${user.user_metadata.full_name.split(" ")[0]}`
+        : "Sua Barbearia";
+
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://barber-zap-three.vercel.app"}/api/email/subscription-activated`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          userName: user.user_metadata?.full_name || email.split("@")[0],
+          barbershopName,
+        }),
+      }).catch((err) => console.warn("[Cakto Webhook] Erro ao enviar e-mail de ativação:", err));
+    }
+
     return NextResponse.json({
       received: true,
       user_id: user.id,

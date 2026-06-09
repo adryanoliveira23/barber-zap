@@ -210,6 +210,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.warn("Erro ao criar serviços padrão:", e);
           }
         }
+
+        // 4. Enviar e-mail de boas-vindas (não bloqueante)
+        const bookingUrl = `${typeof window !== "undefined" ? window.location.origin : "https://barber-zap-three.vercel.app"}/dashboard`;
+        fetch("/api/email/welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            userName: fullName,
+            barbershopName: shopName,
+            bookingUrl,
+          }),
+        }).catch((err) => console.warn("Erro ao enviar e-mail de boas-vindas:", err));
       }
 
       return { error: null };
