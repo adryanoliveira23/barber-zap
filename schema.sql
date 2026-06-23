@@ -238,3 +238,32 @@ CREATE OR REPLACE TRIGGER update_schedules_updated_at BEFORE UPDATE ON public.sc
 CREATE OR REPLACE TRIGGER update_appointments_updated_at BEFORE UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION public.update_modified_column();
 CREATE OR REPLACE TRIGGER update_customers_updated_at BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.update_modified_column();
 CREATE OR REPLACE TRIGGER update_loyalty_updated_at BEFORE UPDATE ON public.loyalty FOR EACH ROW EXECUTE FUNCTION public.update_modified_column();
+
+
+-- 8. TABELA LANDING_EVENTS (Analytics da Landing)
+CREATE TABLE IF NOT EXISTS public.landing_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id TEXT NOT NULL,
+    event_name TEXT NOT NULL,
+    path TEXT,
+    referrer TEXT,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    utm_content TEXT,
+    utm_term TEXT,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_landing_events_created_at ON public.landing_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_landing_events_event_name ON public.landing_events(event_name);
+CREATE INDEX IF NOT EXISTS idx_landing_events_session_id ON public.landing_events(session_id);
+
+ALTER TABLE public.landing_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Qualquer visitante pode registrar evento da landing" ON public.landing_events
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Leitura pública de eventos agregáveis" ON public.landing_events
+    FOR SELECT USING (true);

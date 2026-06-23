@@ -140,6 +140,28 @@ ALTER TABLE public.loyalty ADD COLUMN IF NOT EXISTS visits_count INTEGER DEFAULT
 ALTER TABLE public.loyalty ADD COLUMN IF NOT EXISTS progress INTEGER DEFAULT 0;
 
 -- =====================================================
+-- TABELA: landing_events
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.landing_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT NOT NULL,
+  event_name TEXT NOT NULL,
+  path TEXT,
+  referrer TEXT,
+  utm_source TEXT,
+  utm_medium TEXT,
+  utm_campaign TEXT,
+  utm_content TEXT,
+  utm_term TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_landing_events_created_at ON public.landing_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_landing_events_event_name ON public.landing_events(event_name);
+CREATE INDEX IF NOT EXISTS idx_landing_events_session_id ON public.landing_events(session_id);
+
+-- =====================================================
 -- TRIGGER: Criar perfil ao registrar usuário
 -- =====================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -167,6 +189,7 @@ ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.loyalty ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.landing_events ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- POLICIES (Drop antes de recriar para evitar conflito)
@@ -247,6 +270,13 @@ CREATE POLICY "auth_manage_loyalty" ON public.loyalty
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.barbershops WHERE barbershops.id = loyalty.barbershop_id AND barbershops.user_id = auth.uid())
   );
+
+-- landing_events
+DROP POLICY IF EXISTS "public_insert_landing_events" ON public.landing_events;
+CREATE POLICY "public_insert_landing_events" ON public.landing_events FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "public_select_landing_events" ON public.landing_events;
+CREATE POLICY "public_select_landing_events" ON public.landing_events FOR SELECT USING (true);
 
 -- =====================================================
 -- Recarregar cache do schema do PostgREST

@@ -2,47 +2,250 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+type AppointmentStatus = "pending" | "confirmed" | "completed" | "cancelled" | "no_show" | string;
+
+interface AppointmentMetricRow {
+  barbershop_id: string;
+  total_price: number | string | null;
+  status: AppointmentStatus | null;
+  created_at: string | null;
+}
+
+interface BarbershopScopedRow {
+  barbershop_id: string;
+}
+
+interface LandingEventRow {
+  session_id: string;
+  event_name: string;
+  created_at: string | null;
+  referrer: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+}
+
+const daysAgo = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+};
+
+const uniqueCount = (rows: BarbershopScopedRow[] | null | undefined) =>
+  new Set((rows || []).map((row) => row.barbershop_id).filter(Boolean)).size;
+
+const fallbackLabel = (value: string | null | undefined, fallback: string) => {
+  const normalized = value?.trim();
+  return normalized || fallback;
+};
+
+const referrerSource = (referrer: string | null | undefined) => {
+  if (!referrer) return "Direto / sem UTM";
+
+  try {
+    return new URL(referrer).hostname.replace(/^www\./, "");
+  } catch {
+    return "Referência externa";
+  }
+};
+
+const buildTrafficBreakdown = (
+  rows: LandingEventRow[],
+  getLabel: (row: LandingEventRow) => string,
+  limit = 8
+) => {
+  const groups = new Map<
+    string,
+    {
+      sessions: Set<string>;
+      pricingSessions: Set<string>;
+      checkoutSessions: Set<string>;
+      events: number;
+    }
+  >();
+
+  rows.forEach((row) => {
+    const label = getLabel(row);
+    const group = groups.get(label) || {
+      sessions: new Set<string>(),
+      pricingSessions: new Set<string>(),
+      checkoutSessions: new Set<string>(),
+      events: 0,
+    };
+
+    group.sessions.add(row.session_id);
+    group.events += 1;
+    if (row.event_name === "pricing_view") group.pricingSessions.add(row.session_id);
+    if (row.event_name === "checkout_click") group.checkoutSessions.add(row.session_id);
+    groups.set(label, group);
+  });
+
+  return Array.from(groups.entries())
+    .map(([label, group]) => {
+      const visitors = group.sessions.size;
+      const checkoutClicks = group.checkoutSessions.size;
+      return {
+        label,
+        visitors,
+        pricingViews: group.pricingSessions.size,
+        checkoutClicks,
+        events: group.events,
+        checkoutRate: visitors > 0 ? Math.round((checkoutClicks / visitors) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.visitors - a.visitors || b.checkoutClicks - a.checkoutClicks)
+    .slice(0, limit);
+};
+
+const buildDailyTraffic = (rows: LandingEventRow[]) => {
+  const buckets = new Map<string, { sessions: Set<string>; checkoutSessions: Set<string> }>();
+
+  for (let i = 13; i >= 0; i -= 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = date.toISOString().slice(0, 10);
+    buckets.set(key, { sessions: new Set<string>(), checkoutSessions: new Set<string>() });
+  }
+
+  rows.forEach((row) => {
+    if (!row.created_at) return;
+    const key = row.created_at.slice(0, 10);
+    const bucket = buckets.get(key);
+    if (!bucket) return;
+
+    bucket.sessions.add(row.session_id);
+    if (row.event_name === "checkout_click") bucket.checkoutSessions.add(row.session_id);
+  });
+
+  return Array.from(buckets.entries()).map(([date, bucket]) => ({
+    date,
+    visitors: bucket.sessions.size,
+    checkoutClicks: bucket.checkoutSessions.size,
+  }));
+};
+
 export async function GET() {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  // Total de barbearias
-  const { count: barbershopsCount } = await supabase
-    .from("barbershops")
-    .select("*", { count: "exact", head: true });
+  const [
+    { count: barbershopsCount },
+    { count: appointmentsCount },
+    { data: services },
+    { data: schedules },
+    { data: appointments },
+    { data: recent },
+    { data: landingEvents, error: landingEventsError },
+  ] = await Promise.all([
+    supabase.from("barbershops").select("*", { count: "exact", head: true }),
+    supabase.from("appointments").select("*", { count: "exact", head: true }),
+    supabase.from("services").select("barbershop_id").eq("active", true),
+    supabase.from("schedules").select("barbershop_id"),
+    supabase.from("appointments").select("barbershop_id,total_price,status,created_at"),
+    supabase
+      .from("appointments")
+      .select("*, barbershops!inner(name)")
+      .gte("created_at", daysAgo(30))
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("landing_events")
+      .select("session_id,event_name,created_at,referrer,utm_source,utm_medium,utm_campaign")
+      .gte("created_at", daysAgo(30)),
+  ]);
 
-  // Total de usuários (via service role)
+  if (landingEventsError) {
+    console.warn("Analytics da landing indisponível:", landingEventsError.message);
+  }
+
   let usersCount = 0;
   try {
-    const { data: { users } } = await supabase.auth.admin.listUsers();
+    const {
+      data: { users },
+    } = await supabase.auth.admin.listUsers();
     usersCount = users?.length || 0;
   } catch (err) {
     console.error("Erro ao buscar usuários:", err);
   }
 
-  // Total de agendamentos e receita
-  const { data: appointments } = await supabase
-    .from("appointments")
-    .select("total_price, status, created_at")
-    .eq("status", "completed");
+  const appointmentRows = (appointments || []) as AppointmentMetricRow[];
+  const completedAppointments = appointmentRows.filter((row) => row.status === "completed");
+  const totalRevenue = completedAppointments.reduce((acc, row) => acc + Number(row.total_price || 0), 0);
 
-  const totalRevenue = appointments?.reduce((acc, curr) => acc + curr.total_price, 0) || 0;
+  const last7 = daysAgo(7);
+  const last30 = daysAgo(30);
+  const appointmentsLast7 = appointmentRows.filter((row) => row.created_at && row.created_at >= last7);
+  const appointmentsLast30 = appointmentRows.filter((row) => row.created_at && row.created_at >= last30);
+  const completedLast30 = appointmentsLast30.filter((row) => row.status === "completed");
 
-  // Agendamentos recentes (últimos 30 dias)
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const { data: recent } = await supabase
-    .from("appointments")
-    .select("*, barbershops!inner(name)")
-    .gte("created_at", thirtyDaysAgo.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const statusCounts = appointmentRows.reduce<Record<string, number>>((acc, row) => {
+    const status = row.status || "unknown";
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const shopsWithServices = uniqueCount((services || []) as BarbershopScopedRow[]);
+  const shopsWithSchedule = uniqueCount((schedules || []) as BarbershopScopedRow[]);
+  const shopsWithAppointments = uniqueCount(appointmentRows);
+  const activeShops7d = uniqueCount(appointmentsLast7);
+  const activeShops30d = uniqueCount(appointmentsLast30);
+  const barbershopsTotal = barbershopsCount || 0;
+  const landingRows = (landingEvents || []) as LandingEventRow[];
+  const landingEventCounts = landingRows.reduce<Record<string, number>>((acc, row) => {
+    acc[row.event_name] = (acc[row.event_name] || 0) + 1;
+    return acc;
+  }, {});
+  const uniqueLandingSessions = new Set(landingRows.map((row) => row.session_id).filter(Boolean)).size;
+  const pricingSessions = new Set(
+    landingRows.filter((row) => row.event_name === "pricing_view").map((row) => row.session_id).filter(Boolean)
+  ).size;
+  const checkoutSessions = new Set(
+    landingRows.filter((row) => row.event_name === "checkout_click").map((row) => row.session_id).filter(Boolean)
+  ).size;
+  const trafficSources = buildTrafficBreakdown(landingRows, (row) =>
+    fallbackLabel(row.utm_source, referrerSource(row.referrer))
+  );
+  const trafficMediums = buildTrafficBreakdown(landingRows, (row) => fallbackLabel(row.utm_medium, "Sem mídia"));
+  const trafficCampaigns = buildTrafficBreakdown(landingRows, (row) => fallbackLabel(row.utm_campaign, "Sem campanha"));
+  const dailyTraffic = buildDailyTraffic(landingRows);
 
   return NextResponse.json({
-    totalBarbershops: barbershopsCount || 0,
+    totalBarbershops: barbershopsTotal,
     totalUsers: usersCount,
-    totalAppointments: appointments?.length || 0,
+    totalAppointments: appointmentsCount || 0,
     totalRevenue,
     recentAppointments: recent || [],
+    analytics: {
+      shopsWithServices,
+      shopsWithSchedule,
+      shopsWithAppointments,
+      activeShops7d,
+      activeShops30d,
+      retention7d: barbershopsTotal > 0 ? Math.round((activeShops7d / barbershopsTotal) * 100) : 0,
+      retention30d: barbershopsTotal > 0 ? Math.round((activeShops30d / barbershopsTotal) * 100) : 0,
+      appointmentsLast7: appointmentsLast7.length,
+      appointmentsLast30: appointmentsLast30.length,
+      revenueLast30: completedLast30.reduce((acc, row) => acc + Number(row.total_price || 0), 0),
+      statusCounts,
+      landingAnalyticsAvailable: !landingEventsError,
+      landingVisitors30d: uniqueLandingSessions,
+      landingEventCounts,
+      trafficSources,
+      trafficMediums,
+      trafficCampaigns,
+      dailyTraffic,
+      landingFunnel: [
+        { label: "Visitou landing", value: uniqueLandingSessions },
+        { label: "Viu planos", value: pricingSessions },
+        { label: "Clicou checkout", value: checkoutSessions },
+      ],
+      onboardingFunnel: [
+        { label: "Usuários cadastrados", value: usersCount },
+        { label: "Barbearias criadas", value: barbershopsTotal },
+        { label: "Com serviços ativos", value: shopsWithServices },
+        { label: "Com agenda configurada", value: shopsWithSchedule },
+        { label: "Com agendamento recebido", value: shopsWithAppointments },
+      ],
+    },
   });
 }
