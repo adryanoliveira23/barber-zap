@@ -17,6 +17,7 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [shopName, setShopName] = useState("");
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -84,6 +85,10 @@ function LoginContent() {
         setAuthError("Por favor, informe seu WhatsApp/Celular.");
         return;
       }
+      if (!shopName) {
+        setAuthError("Por favor, informe o nome da sua barbearia.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -106,7 +111,7 @@ function LoginContent() {
         router.push("/dashboard");
       }
     } else {
-      const { error: err } = await signUp(email, password, fullName, whatsapp);
+      const { error: err } = await signUp(email, password, fullName, whatsapp, shopName);
       if (err) {
         setAuthError(err.message || "Não foi possível criar sua conta.");
         error("Falha no cadastro", err.message || "Não foi possível criar sua conta.");
@@ -262,6 +267,17 @@ function LoginContent() {
                             value={whatsapp}
                             onChange={(e) => {
                               setWhatsapp(e.target.value);
+                              setAuthError("");
+                            }}
+                            required={!isLogin}
+                          />
+                          <Input
+                            type="text"
+                            label="Nome da barbearia"
+                            placeholder="Ex: Barbearia do Carlos"
+                            value={shopName}
+                            onChange={(e) => {
+                              setShopName(e.target.value);
                               setAuthError("");
                             }}
                             required={!isLogin}

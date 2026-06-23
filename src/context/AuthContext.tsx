@@ -16,7 +16,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string, whatsapp: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, whatsapp: string, shopName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   refreshSession: () => Promise<void>;
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, whatsapp: string) => {
+  const signUp = async (email: string, password: string, fullName: string, whatsapp: string, shopName?: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Criar barbearia — slug com sufixo aleatório para evitar colisão
         const firstName = fullName.split(" ")[0] || "Barbeiro";
-        const shopName = `Barbearia de ${firstName}`;
+        const finalShopName = shopName || `Barbearia de ${firstName}`;
         const randomSuffix = Math.random().toString(36).slice(2, 6);
         const slug = `${firstName.toLowerCase().replace(/[^a-z0-9]/g, "")}-${randomSuffix}`;
 
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const newShop = {
             id: crypto.randomUUID(),
             user_id: userId,
-            name: shopName,
+            name: finalShopName,
             slug,
             description: "Sua barbearia moderna com agendamento rápido.",
             address: "",
@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({
             email,
             userName: fullName,
-            barbershopName: shopName,
+            barbershopName: finalShopName,
             bookingUrl,
           }),
         }).catch((err) => console.warn("Erro ao enviar e-mail de boas-vindas:", err));

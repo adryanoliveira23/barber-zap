@@ -45,6 +45,8 @@ export default function AdminUsers() {
   const [showModal, setShowModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newFullName, setNewFullName] = useState("");
+  const [newShopName, setNewShopName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -103,7 +105,7 @@ export default function AdminUsers() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newEmail, password: newPassword }),
+        body: JSON.stringify({ email: newEmail, password: newPassword, full_name: newFullName, shop_name: newShopName }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao criar usuário");
@@ -111,6 +113,8 @@ export default function AdminUsers() {
       setCreateSuccess(`Usuário ${data.user.email} criado com sucesso!`);
       setNewEmail("");
       setNewPassword("");
+      setNewFullName("");
+      setNewShopName("");
       await fetchUsers();
       setTimeout(() => {
         setShowModal(false);
@@ -126,7 +130,7 @@ export default function AdminUsers() {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(search.toLowerCase()) ||
       (user.barbershop_name?.toLowerCase().includes(search.toLowerCase()) || false);
-    
+
     if (statusFilter === "all") return matchesSearch;
     if (statusFilter === "subscribed") return matchesSearch && user.subscription_status === "subscribed";
     if (statusFilter === "inactive") return matchesSearch && user.subscription_status !== "subscribed";
@@ -194,32 +198,29 @@ export default function AdminUsers() {
       <div className="flex gap-2 bg-obsidian-900/30 p-1.5 border border-zinc-800/40 rounded-xl w-fit">
         <button
           onClick={() => setStatusFilter("all")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            statusFilter === "all"
-              ? "bg-zinc-800 text-zinc-100"
-              : "text-zinc-400 hover:text-zinc-200"
-          }`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${statusFilter === "all"
+            ? "bg-zinc-800 text-zinc-100"
+            : "text-zinc-400 hover:text-zinc-200"
+            }`}
         >
           Todos ({users.length})
         </button>
         <button
           onClick={() => setStatusFilter("subscribed")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-            statusFilter === "subscribed"
-              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              : "text-zinc-400 hover:text-zinc-200"
-          }`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${statusFilter === "subscribed"
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "text-zinc-400 hover:text-zinc-200"
+            }`}
         >
           <Sparkles className="h-3 w-3 fill-current" />
           Assinantes Pro ({subscribedCount})
         </button>
         <button
           onClick={() => setStatusFilter("inactive")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-            statusFilter === "inactive"
-              ? "bg-red-500/10 text-red-400 border border-red-500/20"
-              : "text-zinc-400 hover:text-zinc-200"
-          }`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${statusFilter === "inactive"
+            ? "bg-red-500/10 text-red-400 border border-red-500/20"
+            : "text-zinc-400 hover:text-zinc-200"
+            }`}
         >
           <AlertCircle className="h-3 w-3" />
           Inativos ({inactiveCount})
@@ -378,6 +379,22 @@ export default function AdminUsers() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+
+                <Input
+                  label="Nome completo"
+                  placeholder="Ex: Carlos Barber"
+                  value={newFullName}
+                  onChange={(e) => setNewFullName(e.target.value)}
+                  required
+                />
+
+                <Input
+                  label="Nome da barbearia"
+                  placeholder="Ex: Barbearia do Carlos"
+                  value={newShopName}
+                  onChange={(e) => setNewShopName(e.target.value)}
+                  required
+                />
 
                 {createError && (
                   <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
