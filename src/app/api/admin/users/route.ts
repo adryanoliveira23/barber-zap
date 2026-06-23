@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const getAdminClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
 
   if (!url || !serviceRoleKey) {
     throw new Error("Supabase admin credentials not configured");
