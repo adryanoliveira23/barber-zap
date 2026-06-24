@@ -23,6 +23,7 @@ interface LandingEventRow {
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
+  metadata: Record<string, any>;
 }
 
 const daysAgo = (days: number) => {
@@ -150,7 +151,7 @@ export async function GET() {
       .limit(10),
     supabase
       .from("landing_events")
-      .select("session_id,event_name,created_at,referrer,utm_source,utm_medium,utm_campaign")
+      .select("session_id,event_name,created_at,referrer,utm_source,utm_medium,utm_campaign,metadata,device")
       .gte("created_at", daysAgo(30)),
   ]);
 
@@ -209,6 +210,38 @@ export async function GET() {
   const trafficCampaigns = buildTrafficBreakdown(landingRows, (row) => fallbackLabel(row.utm_campaign, "Sem campanha"));
   const dailyTraffic = buildDailyTraffic(landingRows);
 
+  const sessionEndEvents = landingRows
+    .filter((row) => row.event_name === "session_end")
+    .map((row) => Number((row.metadata?.duration_seconds as number) || 0))
+    .filter((seconds) => seconds > 0);
+  const avgDuration = sessionEndEvents.length
+    ? Math.round(sessionEndEvents.reduce((acc, s) => acc + s, 0) / sessionEndEvents.length)
+    : 0;
+  const durationBuckets = { under5: 0, fiveTo15: 0, fifteenTo30: 0, over30: 0 };
+  sessionEndEvents.forEach((s) => {
+    if (s < 5) durationBuckets.under5 += 1;
+    else if (s < 15) durationBuckets.fiveTo15 += 1;
+    else if (s < 30) durationBuckets.fifteenTo30 += 1;
+    else durationBuckets.over30 += 1;
+  });
+  const scroll50 = new Set(
+    landingRows
+      .filter((row) => row.event_name === "scroll_depth" && Number((row.metadata?.percent as number) || 0) >= 50)
+      .map((row) => row.session_id)
+      .filter(Boolean)
+  ).size;
+  const scroll100 = new Set(
+    landingRows
+      .filter((row) => row.event_name === "scroll_depth" && Number((row.metadata?.percent as number) || 0) >= 100)
+      .map((row) => row.session_id)
+      .filter(Boolean)
+  ).size;
+  const deviceCounts = landingRows.reduce<Record<string, number>>((acc, row) => {
+    const d = (row as any).device || "unknown";
+    acc[d] = (acc[d] || 0) + 1;
+    return acc;
+  }, {});
+
   return NextResponse.json({
     totalBarbershops: barbershopsTotal,
     totalUsers: usersCount,
@@ -236,6 +269,8 @@ export async function GET() {
       dailyTraffic,
       landingFunnel: [
         { label: "Visitou landing", value: uniqueLandingSessions },
+        { label: "Scroll 50%", value: scroll50 },
+        { label: "Scroll 100%", value: scroll100 },
         { label: "Viu planos", value: pricingSessions },
         { label: "Clicou checkout", value: checkoutSessions },
       ],
@@ -246,6 +281,13 @@ export async function GET() {
         { label: "Com agenda configurada", value: shopsWithSchedule },
         { label: "Com agendamento recebido", value: shopsWithAppointments },
       ],
+      behavioral: {
+        avgDurationSeconds: avgDuration,
+        durationBuckets,
+        scroll50,
+        scroll100,
+        deviceCounts,
+      },
     },
   });
 }

@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
 
       if (res.ok && data.success) {
         localStorage.setItem("admin_token", "authenticated");
-        router.push("/admin");
+        router.push("/admin/users");
       } else {
         setError(data.error || "Senha incorreta");
       }

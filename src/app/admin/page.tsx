@@ -69,6 +69,13 @@ interface AdminAnalytics {
   dailyTraffic: DailyTraffic[];
   landingFunnel: FunnelStep[];
   onboardingFunnel: FunnelStep[];
+  behavioral: {
+    avgDurationSeconds: number;
+    durationBuckets: { under5: number; fiveTo15: number; fifteenTo30: number; over30: number };
+    scroll50: number;
+    scroll100: number;
+    deviceCounts: Record<string, number>;
+  };
 }
 
 interface Stats {
@@ -126,6 +133,8 @@ export default function AdminDashboard() {
     { title: "Receita Total", value: formatCurrency(stats?.totalRevenue || 0), icon: DollarSign, color: "text-gold-500" },
   ];
 
+  const behavioral = stats?.analytics?.behavioral;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -154,6 +163,44 @@ export default function AdminDashboard() {
 
       {analytics && (
         <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-zinc-800 bg-obsidian-900/50">
+              <CardContent className="p-4">
+                <p className="text-xs text-zinc-500 font-semibold">Tempo médio na landing</p>
+                <p className="text-xl font-black text-zinc-100">
+                  {behavioral?.avgDurationSeconds ? `${behavioral.avgDurationSeconds}s` : "—"}
+                </p>
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  {"<5s:"} {behavioral?.durationBuckets?.under5 ?? 0} | 5-15s: {behavioral?.durationBuckets?.fiveTo15 ?? 0} | 15-30s: {behavioral?.durationBuckets?.fifteenTo30 ?? 0} | {">30s:"} {behavioral?.durationBuckets?.over30 ?? 0}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-zinc-800 bg-obsidian-900/50">
+              <CardContent className="p-4">
+                <p className="text-xs text-zinc-500 font-semibold">Scroll 50%</p>
+                <p className="text-xl font-black text-zinc-100">{behavioral?.scroll50 ?? 0}</p>
+                <p className="text-[10px] text-zinc-500 mt-1">Sessões com pelo menos metade da página</p>
+              </CardContent>
+            </Card>
+            <Card className="border-zinc-800 bg-obsidian-900/50">
+              <CardContent className="p-4">
+                <p className="text-xs text-zinc-500 font-semibold">Scroll 100%</p>
+                <p className="text-xl font-black text-zinc-100">{behavioral?.scroll100 ?? 0}</p>
+                <p className="text-[10px] text-zinc-500 mt-1">Sessões até o final</p>
+              </CardContent>
+            </Card>
+            <Card className="border-zinc-800 bg-obsidian-900/50">
+              <CardContent className="p-4">
+                <p className="text-xs text-zinc-500 font-semibold">Dispositivo</p>
+                <p className="text-xl font-black text-zinc-100">
+                  {behavioral?.deviceCounts?.mobile ?? 0} <span className="text-xs text-zinc-500">mobile</span> /{" "}
+                  {behavioral?.deviceCounts?.desktop ?? 0} <span className="text-xs text-zinc-500">desktop</span>
+                </p>
+                <p className="text-[10px] text-zinc-500 mt-1">Distribuição de visitantes</p>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid gap-4 lg:grid-cols-3">
             <InsightCard
               icon={MousePointerClick}

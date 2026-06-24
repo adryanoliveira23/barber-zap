@@ -26,6 +26,7 @@ import BookingSimulator from "@/components/BookingSimulator";
 import WhatsAppChatDemo from "@/components/WhatsAppChatDemo";
 import WhatsAppHeroDemo from "@/components/WhatsAppHeroDemo";
 import UtmifyScript from "@/components/UtmifyScript";
+import LandingTracker from "@/components/LandingTracker";
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -413,6 +414,7 @@ export default function LandingPage() {
         </div>
       </footer>
       <UtmifyScript />
+      <LandingTracker />
     </div>
   );
 }
