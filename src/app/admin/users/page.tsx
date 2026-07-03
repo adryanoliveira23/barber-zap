@@ -462,8 +462,8 @@ export default function AdminUsers() {
                       <strong>Segurança:</strong> As senhas são criptografadas e irreversíveis no banco de dados. Para dar o acesso ao cliente, você precisa gerar uma nova senha.
                     </p>
                     <Button 
-                      variant="outline" 
-                      className="w-full border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+                      variant="secondary" 
+                      className="w-full border border-amber-500/30 bg-transparent text-amber-500 hover:bg-amber-500/10"
                       isLoading={resendingAccessId === viewUserDetails.id}
                       onClick={() => {
                         setViewUserDetails(null);
