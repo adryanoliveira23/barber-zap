@@ -14,9 +14,9 @@ const getAdminClient = () => {
   });
 };
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { email, full_name, whatsapp, barbershop_name, barbershop_slug } = body;
 
@@ -60,9 +60,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const adminSupabase = getAdminClient();
 
     // Normalmente a exclusão no Auth cascateia se o BD estiver configurado corretamente, 
