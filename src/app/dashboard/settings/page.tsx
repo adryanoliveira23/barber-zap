@@ -329,10 +329,10 @@ export default function SettingsPage() {
 
               <Button
                 type="submit"
-                variant="outline"
+                variant="secondary"
                 isLoading={isChangingPassword}
                 disabled={!password || !confirmPassword}
-                className="w-full md:w-auto self-end border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all mt-2"
+                className="w-full md:w-auto self-end border border-zinc-700 bg-transparent text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all mt-2"
               >
                 Atualizar Senha
               </Button>

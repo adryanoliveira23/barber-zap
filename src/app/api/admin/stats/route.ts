@@ -126,8 +126,12 @@ const buildDailyTraffic = (rows: LandingEventRow[]) => {
 };
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const adminKey = process.env.SUPABASE_SECRET_KEY!;
+  const { createClient: createAdminClient } = require("@supabase/supabase-js");
+  const supabase = createAdminClient(adminUrl, adminKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 
   const [
     { count: barbershopsCount },
@@ -151,7 +155,7 @@ export async function GET() {
       .limit(10),
     supabase
       .from("landing_events")
-      .select("session_id,event_name,created_at,referrer,utm_source,utm_medium,utm_campaign,metadata,device")
+      .select("session_id,event_name,created_at,referrer,utm_source,utm_medium,utm_campaign,metadata")
       .gte("created_at", daysAgo(30)),
   ]);
 
@@ -160,18 +164,28 @@ export async function GET() {
   }
 
   let usersCount = 0;
+  let totalRevenue = 0;
+  let usersData: any[] = [];
   try {
     const {
       data: { users },
+      error: usersError
     } = await supabase.auth.admin.listUsers();
-    usersCount = users?.length || 0;
+    
+    if (usersError) {
+      console.error("Erro admin:", usersError);
+    } else {
+      usersData = users || [];
+      usersCount = usersData.length;
+      const subscribedUsersCount = usersData.filter((u: any) => u.user_metadata?.is_subscribed === true).length;
+      totalRevenue = subscribedUsersCount * 19.99; // Calcula MRR baseado nas assinaturas (R$ 19,99 por assinante)
+    }
   } catch (err) {
-    console.error("Erro ao buscar usuários:", err);
+    console.error("Erro ao buscar usuários no stats:", err);
   }
 
   const appointmentRows = (appointments || []) as AppointmentMetricRow[];
   const completedAppointments = appointmentRows.filter((row) => row.status === "completed");
-  const totalRevenue = completedAppointments.reduce((acc, row) => acc + Number(row.total_price || 0), 0);
 
   const last7 = daysAgo(7);
   const last30 = daysAgo(30);
@@ -258,7 +272,7 @@ export async function GET() {
       retention30d: barbershopsTotal > 0 ? Math.round((activeShops30d / barbershopsTotal) * 100) : 0,
       appointmentsLast7: appointmentsLast7.length,
       appointmentsLast30: appointmentsLast30.length,
-      revenueLast30: completedLast30.reduce((acc, row) => acc + Number(row.total_price || 0), 0),
+      revenueLast30: usersData.filter((u: any) => u.user_metadata?.is_subscribed && (!u.user_metadata?.subscription_activated_at || u.user_metadata.subscription_activated_at >= daysAgo(30))).length * 19.99,
       statusCounts,
       landingAnalyticsAvailable: !landingEventsError,
       landingVisitors30d: uniqueLandingSessions,
