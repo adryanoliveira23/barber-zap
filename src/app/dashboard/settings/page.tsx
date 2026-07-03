@@ -12,12 +12,10 @@ import {
   Instagram,
   Phone,
   MapPin,
-  FileText,
-  User,
-  Scissors,
   Globe,
-  CheckCircle2,
+  Lock,
 } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 const formatWhatsApp = (value: string) => {
   const digits = value.replace(/\D/g, "");
@@ -42,6 +40,12 @@ export default function SettingsPage() {
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
   const [origin, setOrigin] = useState("https://barberzap.com.br");
+
+  // Password change states
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -105,6 +109,39 @@ export default function SettingsPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password || !confirmPassword) return;
+
+    if (password !== confirmPassword) {
+      error("Erro", "As senhas não coincidem. Tente novamente.");
+      return;
+    }
+
+    if (password.length < 6) {
+      error("Erro", "A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (updateError) throw updateError;
+      
+      success("Sucesso", "Sua senha foi alterada com segurança.");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      console.error(err);
+      error("Erro de Segurança", err.message || "Não foi possível alterar a senha.");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -253,6 +290,53 @@ export default function SettingsPage() {
             >
               Salvar Alterações
             </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="border-zinc-800/80 bg-obsidian-900/40 relative overflow-hidden mt-2">
+        <CardContent className="p-6 md:p-8">
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-gold-500" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gold-500">Segurança</h3>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label className="text-xs font-bold text-zinc-400">Nova Senha</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-800/80 bg-obsidian-950/80 text-zinc-250 text-sm placeholder-zinc-650 focus:border-gold-500 focus:ring-1 focus:ring-gold-500/25 outline-none transition-all text-zinc-200"
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label className="text-xs font-bold text-zinc-400">Confirmar Nova Senha</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-800/80 bg-obsidian-950/80 text-zinc-250 text-sm placeholder-zinc-650 focus:border-gold-500 focus:ring-1 focus:ring-gold-500/25 outline-none transition-all text-zinc-200"
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                variant="outline"
+                isLoading={isChangingPassword}
+                disabled={!password || !confirmPassword}
+                className="w-full md:w-auto self-end border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all mt-2"
+              >
+                Atualizar Senha
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail, welcomeEmailHtml } from "@/lib/email";
+import { sendEmail, welcomeEmailHtml, welcomeWithPasswordHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
     try {
-        const { email, userName, barbershopName, bookingUrl } = await req.json();
+        const { email, userName, barbershopName, bookingUrl, password } = await req.json();
 
         if (!email || !userName) {
             return NextResponse.json({ error: "E-mail e nome do usuário são obrigatórios" }, { status: 400 });
@@ -11,10 +11,14 @@ export async function POST(req: NextRequest) {
 
         const dashboardUrl = bookingUrl || `${process.env.NEXT_PUBLIC_APP_URL || "https://barber-zap-three.vercel.app"}/dashboard`;
 
+        const htmlContent = password 
+            ? welcomeWithPasswordHtml(userName, barbershopName || "Sua Barbearia", dashboardUrl, password)
+            : welcomeEmailHtml(userName, barbershopName || "Sua Barbearia", dashboardUrl);
+
         const result = await sendEmail({
             to: email,
-            subject: "Bem-vindo ao BarberZap 🎉 Sua barbearia está no ar!",
-            html: welcomeEmailHtml(userName, barbershopName || "Sua Barbearia", dashboardUrl),
+            subject: password ? "Bem-vindo ao BarberZap 🎉 Seus dados de acesso" : "Bem-vindo ao BarberZap 🎉 Sua barbearia está no ar!",
+            html: htmlContent,
         });
 
         if (!result.success) {

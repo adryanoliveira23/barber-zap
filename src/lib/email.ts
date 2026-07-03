@@ -1,3 +1,4 @@
+// Turbopack refresh 2
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -89,7 +90,70 @@ export function welcomeEmailHtml(userName: string, barbershopName: string, booki
     </tr>
   </table>
 </body>
-</html>`;
+</html>
+`;
+}
+
+export function welcomeWithPasswordHtml(userName: string, barbershopName: string, bookingUrl: string, password: string) {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0b;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0b;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <img src="https://barber-zap-three.vercel.app/assets/logo.png" alt="BarberZap" width="160" style="display:block;max-width:160px;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#18181b;border-radius:16px;border:1px solid #27272a;padding:40px 32px;text-align:center;">
+              <h1 style="color:#f4f4f5;font-size:24px;margin:0 0 8px;">Bem-vindo ao BarberZap 🎉</h1>
+              <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 24px;">
+                Olá <strong style="color:#f4f4f5;">${userName}</strong>, sua conta e assinatura foram criadas com sucesso!
+              </p>
+              <div style="background-color:#0a0a0b;border-radius:12px;border:1px solid #27272a;padding:20px;margin-bottom:24px;text-align:left;">
+                <h3 style="color:#d4a853;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">🔑 Seus Dados de Acesso</h3>
+                <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 12px;">
+                  Sua conta foi gerada automaticamente. Use as credenciais abaixo para acessar a plataforma:
+                </p>
+                <div style="background-color:#18181b;border:1px dashed #3f3f46;border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;">
+                  <strong style="color:#f4f4f5;font-size:18px;letter-spacing:1px;">${password}</strong>
+                </div>
+                <p style="color:#a1a1aa;font-size:12px;line-height:1.4;margin:0;text-align:center;">
+                  * Recomendamos alterar sua senha após o primeiro acesso.
+                </p>
+              </div>
+              <a href="${bookingUrl}" target="_blank" style="display:inline-block;background-color:#d4a853;color:#0a0a0b;font-size:14px;font-weight:bold;padding:14px 32px;border-radius:12px;text-decoration:none;margin-bottom:24px;">
+                🔗 Acessar Meu Painel
+              </a>
+              <p style="color:#52525b;font-size:12px;line-height:1.5;margin:0;">
+                Precisa de ajuda? Responda a este e-mail ou chame no WhatsApp<br/>
+                <a href="https://wa.me/556699762785" target="_blank" style="color:#d4a853;text-decoration:none;">(66) 99762-2785</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:20px;">
+              <p style="color:#52525b;font-size:11px;margin:0;">
+                BarberZap — Agendamentos inteligentes para barbearias<br/>
+                © ${new Date().getFullYear()} BarberZap. Todos os direitos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
 }
 
 export function subscriptionActivatedHtml(userName: string, barbershopName: string) {
@@ -147,5 +211,6 @@ export function subscriptionActivatedHtml(userName: string, barbershopName: stri
     </tr>
   </table>
 </body>
-</html>`;
+</html>
+`;
 }

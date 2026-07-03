@@ -30,7 +30,11 @@ export async function GET() {
 
     const { data: barbershops, error: shopsError } = await adminSupabase
       .from("barbershops")
-      .select("user_id, name, slug");
+      .select("*");
+
+    const { data: profiles, error: profilesError } = await adminSupabase
+      .from("profiles")
+      .select("id, full_name");
 
     if (shopsError) {
       console.error("Erro ao buscar barbearias:", shopsError);
@@ -39,18 +43,20 @@ export async function GET() {
     const enriched = users.map(user => {
       const barbershop = barbershops?.find(b => b.user_id === user.id);
       const isSubscribed = user.user_metadata?.is_subscribed === true;
-      const trialStatus = getTrialStatus(user.created_at, isSubscribed);
+      const profile = profiles?.find(p => p.id === user.id);
 
       return {
         id: user.id,
         email: user.email,
+        full_name: profile?.full_name ?? user.user_metadata?.full_name ?? null,
         created_at: user.created_at,
         barbershop_name: barbershop?.name ?? null,
         barbershop_slug: barbershop?.slug ?? null,
+        barbershop_address: barbershop?.address ?? null,
+        barbershop_whatsapp: barbershop?.whatsapp ?? null,
+        barbershop_instagram: barbershop?.instagram ?? null,
+        barbershop_description: barbershop?.description ?? null,
         is_subscribed: isSubscribed,
-        subscription_status: trialStatus.status, // "subscribed" | "trial" | "expired"
-        trial_days_remaining: trialStatus.daysRemaining,
-        subscription_activated_at: user.user_metadata?.subscription_activated_at ?? null,
         whatsapp: user.user_metadata?.whatsapp ?? null,
       };
     });

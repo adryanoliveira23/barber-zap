@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendEmail, welcomeWithPasswordHtml, subscriptionActivatedHtml } from "@/lib/email";
 
 const getAdminClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -57,11 +58,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to query users" }, { status: 500 });
     }
 
-    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-    if (!user) {
-      console.warn("[Cakto Webhook] No user found for email:", email);
-      return NextResponse.json({ received: true, warning: "user_not_found" }, { status: 200 });
-    }
+    let user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
 
     // Determinar novo status baseado no evento
     const isPaidEvent = [
@@ -98,19 +95,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, warning: "unknown_event" }, { status: 200 });
     }
 
-    // Atualizar metadados do usuário no Supabase Auth
-    const { error: updateError } = await adminSupabase.auth.admin.updateUserById(user.id, {
-      user_metadata: {
-        ...user.user_metadata,
-        is_subscribed: newSubscriptionStatus,
-        subscription_activated_at: newSubscriptionStatus ? new Date().toISOString() : user.user_metadata?.subscription_activated_at,
-        subscription_cancelled_at: !newSubscriptionStatus ? new Date().toISOString() : null,
-      },
-    });
+    // Se o usuário não existir e for um evento de pagamento pago, criar o usuário
+    if (!user) {
+      if (isPaidEvent) {
+        console.log(`[Cakto Webhook] User ${email} not found. Creating account...`);
+        
+        // Gerar senha aleatória segura
+        const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase() + "!";
+        const userName = body?.data?.customer?.name || body?.customer?.name || email.split("@")[0];
+        
+        const { data: newUser, error: createError } = await adminSupabase.auth.admin.createUser({
+          email: email,
+          password: randomPassword,
+          email_confirm: true,
+          user_metadata: {
+            full_name: userName,
+            is_subscribed: true,
+            subscription_activated_at: new Date().toISOString(),
+          }
+        });
 
-    if (updateError) {
-      console.error("[Cakto Webhook] Error updating user metadata:", updateError);
-      return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
+        if (createError || !newUser.user) {
+          console.error("[Cakto Webhook] Error creating user:", createError);
+          return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+        }
+
+        user = newUser.user;
+        console.log(`[Cakto Webhook] Created new user: ${user.id}`);
+
+        // Enviar e-mail de boas vindas com a senha
+        const barbershopName = userName ? `Barbearia de ${userName.split(" ")[0]}` : "Sua Barbearia";
+        const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://barber-zap-three.vercel.app"}/dashboard`;
+        
+        sendEmail({
+          to: email,
+          subject: "Bem-vindo ao BarberZap 🎉 Seus dados de acesso",
+          html: welcomeWithPasswordHtml(userName, barbershopName, dashboardUrl, randomPassword),
+        }).catch((err) => console.warn("[Cakto Webhook] Erro ao enviar e-mail de boas vindas com senha:", err));
+
+      } else {
+        console.warn("[Cakto Webhook] No user found for email and not a paid event:", email);
+        return NextResponse.json({ received: true, warning: "user_not_found" }, { status: 200 });
+      }
+    } else {
+      // Usuário existe, apenas atualizar metadados
+      const { error: updateError } = await adminSupabase.auth.admin.updateUserById(user.id, {
+        user_metadata: {
+          ...user.user_metadata,
+          is_subscribed: newSubscriptionStatus,
+          subscription_activated_at: newSubscriptionStatus ? new Date().toISOString() : user.user_metadata?.subscription_activated_at,
+          subscription_cancelled_at: !newSubscriptionStatus ? new Date().toISOString() : null,
+        },
+      });
+
+      if (updateError) {
+        console.error("[Cakto Webhook] Error updating user metadata:", updateError);
+        return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
+      }
     }
 
     console.log(`[Cakto Webhook] User ${email} subscription set to: ${newSubscriptionStatus}`);
@@ -121,14 +162,10 @@ export async function POST(req: NextRequest) {
         ? `Barbearia de ${user.user_metadata.full_name.split(" ")[0]}`
         : "Sua Barbearia";
 
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://barber-zap-three.vercel.app"}/api/email/subscription-activated`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          userName: user.user_metadata?.full_name || email.split("@")[0],
-          barbershopName,
-        }),
+      sendEmail({
+        to: email,
+        subject: "Assinatura Pro Ativada! 🚀",
+        html: subscriptionActivatedHtml(user.user_metadata?.full_name || email.split("@")[0], barbershopName),
       }).catch((err) => console.warn("[Cakto Webhook] Erro ao enviar e-mail de ativação:", err));
     }
 
